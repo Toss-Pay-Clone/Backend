@@ -6,6 +6,7 @@ import com.toss.tosspaybackend.domain.member.entity.Member;
 import com.toss.tosspaybackend.domain.member.repository.MemberRepository;
 import com.toss.tosspaybackend.global.Response;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 @RequiredArgsConstructor
@@ -24,7 +25,7 @@ public class MemberService {
                 .build();
 
         return Response.<RegisterResponse>builder()
-                .status(201)
+                .httpStatus(HttpStatus.CREATED)
                 .message("회원가입에 성공했습니다.")
                 .data(responseData)
                 .build();
