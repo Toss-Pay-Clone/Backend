@@ -17,4 +17,8 @@ public record RegisterRequest(
         MobileCarrier mobileCarrier,
         LocalDateTime birthdate
 ) {
+    public Member toEntity() {
+        return Member.of(name, phone, gender, nationality, firstResidentRegistrationNumber,
+                secondResidentRegistrationNumber, mobileCarrier, birthdate);
+    }
 }
