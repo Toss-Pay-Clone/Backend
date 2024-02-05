@@ -61,8 +61,6 @@ public class MemberService {
         if ((gender == Gender.FEMALE && Integer.parseInt(backRRN) % 2 != 0) ||
                 gender == Gender.MALE && Integer.parseInt(backRRN) % 2 != 1) {
             throw new GlobalException(ErrorCode.BAD_REQUEST, "주민번호와 성별이 일치하지 않습니다.");
-        } else if () {
-            throw new GlobalException(ErrorCode.BAD_REQUEST, "주민번호와 성별이 일치하지 않습니다.");
         }
     }
 
