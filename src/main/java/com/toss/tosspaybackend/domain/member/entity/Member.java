@@ -32,4 +32,8 @@ public class Member {
     @Enumerated(EnumType.STRING)
     private MobileCarrier mobileCarrier;
     private LocalDateTime birthdate;
+
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+    private LocalDateTime deletedAt;
 }
