@@ -1,7 +1,6 @@
 package com.toss.tosspaybackend.global.exception;
 
 import lombok.Getter;
-import org.springframework.http.HttpStatus;
 
 
 @Getter
