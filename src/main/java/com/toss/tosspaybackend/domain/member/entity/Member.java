@@ -3,6 +3,7 @@ package com.toss.tosspaybackend.domain.member.entity;
 import com.toss.tosspaybackend.domain.member.enums.Gender;
 import com.toss.tosspaybackend.domain.member.enums.MobileCarrier;
 import com.toss.tosspaybackend.domain.member.enums.Nationality;
+import com.toss.tosspaybackend.global.basetime.AuditListener;
 import com.toss.tosspaybackend.global.basetime.Auditable;
 import com.toss.tosspaybackend.global.basetime.BaseTime;
 import jakarta.persistence.*;
@@ -13,6 +14,7 @@ import java.time.LocalDateTime;
 @Getter
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@EntityListeners(AuditListener.class)
 public class Member implements Auditable {
     @Id
     @GeneratedValue
