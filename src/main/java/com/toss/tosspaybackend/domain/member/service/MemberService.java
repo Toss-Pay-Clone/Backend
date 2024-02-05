@@ -16,6 +16,11 @@ public class MemberService {
     private final MemberRepository memberRepository;
 
     public Response<RegisterResponse> register(RegisterRequest request) {
+        // TODO: 전화번호 검사
+        // TODO: 주민번호 검사
+        // TODO: 생일 검사
+        // TODO: 중복 검사
+
         Member savedMember = memberRepository.save(request.toEntity());
 
         RegisterResponse responseData = RegisterResponse.builder()
