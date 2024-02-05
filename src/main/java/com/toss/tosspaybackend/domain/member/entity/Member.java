@@ -1,6 +1,8 @@
 package com.toss.tosspaybackend.domain.member.entity;
 
+import com.toss.tosspaybackend.domain.member.enums.Gender;
 import com.toss.tosspaybackend.domain.member.enums.MobileCarrier;
+import com.toss.tosspaybackend.domain.member.enums.Nationality;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -20,9 +22,9 @@ public class Member {
     private String phone;
 
     @Enumerated(EnumType.STRING)
-    private String gender;
+    private Gender gender;
     @Enumerated(EnumType.STRING)
-    private String nationality;
+    private Nationality nationality;
 
     private int firstResidentRegistrationNumber;
     private int secondResidentRegistrationNumber;
