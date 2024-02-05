@@ -1,5 +1,6 @@
 package com.toss.tosspaybackend.domain.member.entity;
 
+import com.toss.tosspaybackend.domain.member.enums.MobileCarrier;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -26,6 +27,7 @@ public class Member {
     private int firstResidentRegistrationNumber;
     private int secondResidentRegistrationNumber;
 
-    private String mobileCarrier;
+    @Enumerated(EnumType.STRING)
+    private MobileCarrier mobileCarrier;
     private LocalDateTime birthdate;
 }
