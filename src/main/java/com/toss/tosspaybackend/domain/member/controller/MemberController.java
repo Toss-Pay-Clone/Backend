@@ -4,6 +4,7 @@ import com.toss.tosspaybackend.domain.member.dto.RegisterRequest;
 import com.toss.tosspaybackend.domain.member.dto.RegisterResponse;
 import com.toss.tosspaybackend.domain.member.service.MemberService;
 import com.toss.tosspaybackend.global.Response;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -18,7 +19,7 @@ public class MemberController {
     private final MemberService memberService;
 
     @PostMapping("/register")
-    public Response<RegisterResponse> register(@RequestBody RegisterRequest request) {
+    public Response<RegisterResponse> register(@Valid @RequestBody RegisterRequest request) {
         return memberService.register(request);
     }
 }
