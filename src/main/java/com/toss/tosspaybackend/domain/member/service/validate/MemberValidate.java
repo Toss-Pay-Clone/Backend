@@ -54,8 +54,8 @@ public class MemberValidate {
         int rrnMonth = Integer.parseInt(frontRRN.substring(2, 4));
         int rrnDay = Integer.parseInt(frontRRN.substring(4, 6));
 
-        if (birthdateYearBack != rrnYear &&
-                birthdateMonth != rrnMonth &&
+        if (birthdateYearBack != rrnYear ||
+                birthdateMonth != rrnMonth ||
                 birthdateDay != rrnDay) {
             throw new GlobalException(ErrorCode.BAD_REQUEST, "주민번호와 생일이 일치하지 않습니다.");
         }
