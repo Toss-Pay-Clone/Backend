@@ -22,7 +22,7 @@ public class MemberValidate {
     public void validatePhoneNumber(String phoneNumber) {
         // 전화번호에 010을 포함하고 있으며
         // 010을 제외한 자릿수가 7, 8자리 일 경우
-        if (!phoneNumber.matches("^010\\d{7,8}$")) {
+        if (!phoneNumber.matches("^010\\d{8}$")) {
             throw new GlobalException(ErrorCode.BAD_REQUEST, "전화번호 형식이 유효하지 않습니다.");
         }
     }
