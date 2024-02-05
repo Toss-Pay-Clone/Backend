@@ -25,6 +25,7 @@ public class MemberService {
         memberValidate.validateBirthdate(request.birthdate(), request.residentRegistrationNumberFront(),
                                             request.residentRegistrationNumberBack(), request.gender());
         memberValidate.validateDuplicate(request.name(), request.phone(), request.residentRegistrationNumberFront());
+        memberValidate.validatePassword(request.password(), request.phone(), request.birthdate());
 
         Member savedMember = memberRepository.save(request.toEntity());
 
