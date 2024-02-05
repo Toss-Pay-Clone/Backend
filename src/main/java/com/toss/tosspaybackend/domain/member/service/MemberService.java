@@ -35,7 +35,7 @@ public class MemberService {
                 .build();
 
         return Response.<RegisterResponse>builder()
-                .httpStatus(HttpStatus.CREATED)
+                .httpStatus(HttpStatus.CREATED.value())
                 .message("회원가입에 성공했습니다.")
                 .data(responseData)
                 .build();
