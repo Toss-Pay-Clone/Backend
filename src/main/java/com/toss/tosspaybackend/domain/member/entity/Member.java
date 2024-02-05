@@ -18,6 +18,7 @@ public class Member {
     private String name;
     private String phone;
 
+    @Enumerated(EnumType.STRING)
     private String gender;
     private String nationality;
 
