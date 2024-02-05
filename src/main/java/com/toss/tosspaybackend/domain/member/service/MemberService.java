@@ -12,6 +12,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+
 @RequiredArgsConstructor
 @Service
 public class MemberService {
@@ -23,7 +27,8 @@ public class MemberService {
         validatePhoneNumber(request.phone());
         validateRRN(request.residentRegistrationNumberFront(), request.residentRegistrationNumberBack());
         validateGender(request.gender(), request.residentRegistrationNumberBack());
-        // TODO: 생일 검사 (주민번호 검사 포함)
+        validateBirthdate(request.birthdate(), request.residentRegistrationNumberFront(),
+                request.residentRegistrationNumberBack(), request.gender());
         // TODO: 중복 검사
 
         Member savedMember = memberRepository.save(request.toEntity());
@@ -61,6 +66,34 @@ public class MemberService {
         // 주민번호 - 성별 검사
         if ((gender == Gender.FEMALE && Integer.parseInt(backRRN) % 2 != 0) ||
                 gender == Gender.MALE && Integer.parseInt(backRRN) % 2 != 1) {
+            throw new GlobalException(ErrorCode.BAD_REQUEST, "주민번호와 성별이 일치하지 않습니다.");
+        }
+    }
+
+    private void validateBirthdate(LocalDateTime birthdate, String frontRRN, String backRRN, Gender gender) {
+        // 생일과 주민번호 앞자리가 일치하는가?
+        int birthdateYearFront = birthdate.getYear() / 100;
+        int birthdateYearBack = birthdate.getYear() % 100;
+        int birthdateMonth = birthdate.getMonthValue();
+        int birthdateDay = birthdate.getDayOfMonth();
+
+        int rrnYear = Integer.parseInt(frontRRN.substring(0, 2));
+        int rrnMonth = Integer.parseInt(frontRRN.substring(2, 4));
+        int rrnDay = Integer.parseInt(frontRRN.substring(4, 6));
+
+        if (birthdateYearBack != rrnYear &&
+                birthdateMonth != rrnMonth &&
+                birthdateDay != rrnDay) {
+            throw new GlobalException(ErrorCode.BAD_REQUEST, "주민번호와 생일이 일치하지 않습니다.");
+        }
+
+        // 생일과 주민번호 뒷자리가 일치하는가?
+        Map<Integer, String> yearToRRN = new HashMap<>();
+        yearToRRN.put(18, gender == Gender.MALE ? "9" : "0");
+        yearToRRN.put(19, gender == Gender.MALE ? "1" : "2");
+        yearToRRN.put(20, gender == Gender.MALE ? "3" : "4");
+
+        if (!yearToRRN.get(birthdateYearFront).equals(backRRN)) {
             throw new GlobalException(ErrorCode.BAD_REQUEST, "주민번호와 성별이 일치하지 않습니다.");
         }
     }
