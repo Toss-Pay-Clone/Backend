@@ -71,9 +71,14 @@ public class MemberValidate {
         }
     }
     public void validateDuplicate(String name, String phone, String frontRRN) {
-        Optional<Member> findMember = memberRepository.findByNameAndPhoneAndResidentRegistrationNumberFront(name, phone, frontRRN);
-        if (findMember.isEmpty()) {
-            throw new GlobalException(ErrorCode.BAD_REQUEST, "중복된 계정이 있습니다.");
+        Optional<Member> findPhoneMember = memberRepository.findByPhone(phone);
+        if (findPhoneMember.isPresent()) {
+            throw new GlobalException(ErrorCode.CONFLICT, "이미 사용중인 전화번호입니다.");
+        }
+
+        Optional<Member> findDuplicatedMember = memberRepository.findByNameAndPhoneAndResidentRegistrationNumberFront(name, phone, frontRRN);
+        if (findDuplicatedMember.isPresent()) {
+            throw new GlobalException(ErrorCode.CONFLICT, "중복된 계정이 있습니다.");
         }
     }
 }
