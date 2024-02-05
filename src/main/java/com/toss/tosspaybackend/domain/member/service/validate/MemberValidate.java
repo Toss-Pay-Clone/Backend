@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -79,6 +80,30 @@ public class MemberValidate {
         Optional<Member> findDuplicatedMember = memberRepository.findByNameAndPhoneAndResidentRegistrationNumberFront(name, phone, frontRRN);
         if (findDuplicatedMember.isPresent()) {
             throw new GlobalException(ErrorCode.CONFLICT, "중복된 계정이 있습니다.");
+        }
+    }
+
+    public void validatePassword(String password, String phoneNumber, LocalDateTime birthdate) {
+        if (!password.matches("^\\d{4}[a-zA-Z]$")) {
+            throw new GlobalException(ErrorCode.BAD_REQUEST, "비밀번호 형식이 유효하지 않습니다.");
+        }
+
+        String digits = password.substring(0, 4);
+
+        // 숫자 부분이 전화번호나 생년월일에 포함되지 않는지 확인
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
+        String birthdateStr = birthdate.format(formatter);
+
+        if (phoneNumber.contains(digits) || birthdateStr.contains(digits)) {
+            throw new GlobalException(ErrorCode.BAD_REQUEST, "비밀번호에 전화번호나 생년월일이 포함될 수 없습니다.");
+        }
+
+        // 숫자 부분에 연속 또는 중복된 숫자가 있는지 확인
+        for (int i = 0; i < digits.length() - 1; i++) {
+            if (digits.charAt(i) == digits.charAt(i + 1) ||
+                    Math.abs(digits.charAt(i) - digits.charAt(i + 1)) == 1) {
+                throw new GlobalException(ErrorCode.BAD_REQUEST, "비밀번호에 연속되거나 중복되는 숫자를 사용할 수 없습니다.");
+            }
         }
     }
 }
