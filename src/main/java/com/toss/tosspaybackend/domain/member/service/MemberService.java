@@ -23,6 +23,8 @@ public class MemberService {
         validateRRN(request.residentRegistrationNumberFront(), request.residentRegistrationNumberBack());
         // TODO: 생일 검사
         // TODO: 중복 검사
+        // TODO: 주민번호 뒷자리 - 성별 일치 검사
+        // TODO: 주민번호 앞자리 - 생년월일 일치 검사
 
         Member savedMember = memberRepository.save(request.toEntity());
 
