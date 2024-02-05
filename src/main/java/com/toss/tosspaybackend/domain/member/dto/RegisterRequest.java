@@ -11,6 +11,7 @@ public record RegisterRequest(
         String name,
         String phone,
         Gender gender,
+        String password,
         Nationality nationality,
         String residentRegistrationNumberFront,
         String residentRegistrationNumberBack,
@@ -18,7 +19,7 @@ public record RegisterRequest(
         LocalDateTime birthdate
 ) {
     public Member toEntity() {
-        return Member.of(name, phone, gender, nationality, residentRegistrationNumberFront,
+        return Member.of(name, phone, gender, password, nationality, residentRegistrationNumberFront,
                 residentRegistrationNumberBack, mobileCarrier, birthdate);
     }
 }
