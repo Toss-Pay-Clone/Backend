@@ -12,13 +12,13 @@ public record RegisterRequest(
         String phone,
         Gender gender,
         Nationality nationality,
-        String firstResidentRegistrationNumber,
-        String secondResidentRegistrationNumber,
+        String residentRegistrationNumberFront,
+        String residentRegistrationNumberBack,
         MobileCarrier mobileCarrier,
         LocalDateTime birthdate
 ) {
     public Member toEntity() {
-        return Member.of(name, phone, gender, nationality, firstResidentRegistrationNumber,
-                secondResidentRegistrationNumber, mobileCarrier, birthdate);
+        return Member.of(name, phone, gender, nationality, residentRegistrationNumberFront,
+                residentRegistrationNumberBack, mobileCarrier, birthdate);
     }
 }

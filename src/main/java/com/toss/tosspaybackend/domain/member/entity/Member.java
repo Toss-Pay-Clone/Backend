@@ -28,8 +28,8 @@ public class Member implements Auditable {
     @Enumerated(EnumType.STRING)
     private Nationality nationality;
 
-    private String firstResidentRegistrationNumber;
-    private String secondResidentRegistrationNumber;
+    private String residentRegistrationNumberFront;
+    private String residentRegistrationNumberBack;
 
     @Enumerated(EnumType.STRING)
     private MobileCarrier mobileCarrier;
@@ -42,28 +42,28 @@ public class Member implements Auditable {
 
     @Builder
     private Member(String name, String phone, Gender gender, Nationality nationality,
-                  String firstResidentRegistrationNumber, String secondResidentRegistrationNumber,
+                  String residentRegistrationNumberFront, String residentRegistrationNumberBack,
                   MobileCarrier mobileCarrier, LocalDateTime birthdate) {
         this.name = name;
         this.phone = phone;
         this.gender = gender;
         this.nationality = nationality;
-        this.firstResidentRegistrationNumber = firstResidentRegistrationNumber;
-        this.secondResidentRegistrationNumber = secondResidentRegistrationNumber;
+        this.residentRegistrationNumberFront = residentRegistrationNumberFront;
+        this.residentRegistrationNumberBack = residentRegistrationNumberBack;
         this.mobileCarrier = mobileCarrier;
         this.birthdate = birthdate;
     }
 
     public static Member of(String name, String phone, Gender gender, Nationality nationality,
-                            String firstResidentRegistrationNumber, String secondResidentRegistrationNumber,
+                            String residentRegistrationNumberFront, String residentRegistrationNumberBack,
                             MobileCarrier mobileCarrier, LocalDateTime birthdate) {
         return Member.builder()
                 .name(name)
                 .phone(phone)
                 .gender(gender)
                 .nationality(nationality)
-                .firstResidentRegistrationNumber(firstResidentRegistrationNumber)
-                .secondResidentRegistrationNumber(secondResidentRegistrationNumber)
+                .residentRegistrationNumberFront(residentRegistrationNumberFront)
+                .residentRegistrationNumberBack(residentRegistrationNumberBack)
                 .mobileCarrier(mobileCarrier)
                 .birthdate(birthdate)
                 .build();
