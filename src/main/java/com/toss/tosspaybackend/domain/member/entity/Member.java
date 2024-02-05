@@ -20,6 +20,7 @@ public class Member {
 
     @Enumerated(EnumType.STRING)
     private String gender;
+    @Enumerated(EnumType.STRING)
     private String nationality;
 
     private int firstResidentRegistrationNumber;
