@@ -20,7 +20,7 @@ public class MemberService {
     public Response<RegisterResponse> register(RegisterRequest request) {
 
         validatePhoneNumber(request.phone());
-        // TODO: 주민번호 검사
+        validateRRN(request.residentRegistrationNumberFront(), request.residentRegistrationNumberBack());
         // TODO: 생일 검사
         // TODO: 중복 검사
 
@@ -47,5 +47,10 @@ public class MemberService {
         }
     }
 
-
+    private void validateRRN(String frontRRN, String backRRN) {
+        if (!frontRRN.matches("^\\d{2}(0[1-9]|1[0-2])(0[1-9]|[1-2]\\d|3[0-1])$") ||
+                !backRRN.matches("^[0-4|9]$")) {
+            throw new GlobalException(ErrorCode.BAD_REQUEST, "주민번호 형식이 유효하지 않습니다.");
+        }
+    }
 }
