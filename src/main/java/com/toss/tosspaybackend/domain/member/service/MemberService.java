@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @RequiredArgsConstructor
 @Service
@@ -29,7 +30,7 @@ public class MemberService {
         validateGender(request.gender(), request.residentRegistrationNumberBack());
         validateBirthdate(request.birthdate(), request.residentRegistrationNumberFront(),
                 request.residentRegistrationNumberBack(), request.gender());
-        // TODO: 중복 검사
+        validateDuplicate(request.name(), request.phone(), request.residentRegistrationNumberFront());
 
         Member savedMember = memberRepository.save(request.toEntity());
 
@@ -95,6 +96,12 @@ public class MemberService {
 
         if (!yearToRRN.get(birthdateYearFront).equals(backRRN)) {
             throw new GlobalException(ErrorCode.BAD_REQUEST, "주민번호와 성별이 일치하지 않습니다.");
+        }
+    }
+    private void validateDuplicate(String name, String phone, String frontRRN) {
+        Optional<Member> findMember = memberRepository.findByNameAndPhoneAndResidentRegistrationNumberFront(name, phone, frontRRN);
+        if (findMember.isEmpty()) {
+            throw new GlobalException(ErrorCode.BAD_REQUEST, "중복된 계정이 있습니다.");
         }
     }
 }
