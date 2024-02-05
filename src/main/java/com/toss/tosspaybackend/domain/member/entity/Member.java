@@ -28,8 +28,8 @@ public class Member implements Auditable {
     @Enumerated(EnumType.STRING)
     private Nationality nationality;
 
-    private int firstResidentRegistrationNumber;
-    private int secondResidentRegistrationNumber;
+    private String firstResidentRegistrationNumber;
+    private String secondResidentRegistrationNumber;
 
     @Enumerated(EnumType.STRING)
     private MobileCarrier mobileCarrier;
@@ -42,7 +42,7 @@ public class Member implements Auditable {
 
     @Builder
     private Member(String name, String phone, Gender gender, Nationality nationality,
-                  int firstResidentRegistrationNumber, int secondResidentRegistrationNumber,
+                  String firstResidentRegistrationNumber, String secondResidentRegistrationNumber,
                   MobileCarrier mobileCarrier, LocalDateTime birthdate) {
         this.name = name;
         this.phone = phone;
@@ -55,7 +55,7 @@ public class Member implements Auditable {
     }
 
     public static Member of(String name, String phone, Gender gender, Nationality nationality,
-                            int firstResidentRegistrationNumber, int secondResidentRegistrationNumber,
+                            String firstResidentRegistrationNumber, String secondResidentRegistrationNumber,
                             MobileCarrier mobileCarrier, LocalDateTime birthdate) {
         return Member.builder()
                 .name(name)

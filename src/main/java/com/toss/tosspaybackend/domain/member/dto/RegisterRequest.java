@@ -12,8 +12,8 @@ public record RegisterRequest(
         String phone,
         Gender gender,
         Nationality nationality,
-        int firstResidentRegistrationNumber,
-        int secondResidentRegistrationNumber,
+        String firstResidentRegistrationNumber,
+        String secondResidentRegistrationNumber,
         MobileCarrier mobileCarrier,
         LocalDateTime birthdate
 ) {
