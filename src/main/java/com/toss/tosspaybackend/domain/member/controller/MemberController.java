@@ -1,5 +1,7 @@
 package com.toss.tosspaybackend.domain.member.controller;
 
+import com.toss.tosspaybackend.domain.member.dto.LoginRequest;
+import com.toss.tosspaybackend.domain.member.dto.LoginResponse;
 import com.toss.tosspaybackend.domain.member.dto.RegisterRequest;
 import com.toss.tosspaybackend.domain.member.dto.RegisterResponse;
 import com.toss.tosspaybackend.domain.member.service.MemberService;
@@ -21,5 +23,10 @@ public class MemberController {
     @PostMapping("/register")
     public Response<RegisterResponse> register(@Valid @RequestBody RegisterRequest request) {
         return memberService.register(request);
+    }
+
+    @PostMapping("/auth")
+    public Response<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
+        return memberService.login(request);
     }
 }

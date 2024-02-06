@@ -1,11 +1,15 @@
 package com.toss.tosspaybackend.domain.member.service;
 
+import com.toss.tosspaybackend.domain.member.dto.LoginRequest;
+import com.toss.tosspaybackend.domain.member.dto.LoginResponse;
 import com.toss.tosspaybackend.domain.member.dto.RegisterRequest;
 import com.toss.tosspaybackend.domain.member.dto.RegisterResponse;
 import com.toss.tosspaybackend.domain.member.entity.Member;
 import com.toss.tosspaybackend.domain.member.repository.MemberRepository;
 import com.toss.tosspaybackend.domain.member.service.validate.MemberValidate;
 import com.toss.tosspaybackend.global.Response;
+import com.toss.tosspaybackend.global.exception.ErrorCode;
+import com.toss.tosspaybackend.global.exception.GlobalException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -23,7 +27,7 @@ public class MemberService {
         memberValidate.validateRRN(request.residentRegistrationNumberFront(), request.residentRegistrationNumberBack());
         memberValidate.validateGender(request.gender(), request.residentRegistrationNumberBack());
         memberValidate.validateBirthdate(request.birthdate(), request.residentRegistrationNumberFront(),
-                                            request.residentRegistrationNumberBack(), request.gender());
+                request.residentRegistrationNumberBack(), request.gender());
         memberValidate.validateDuplicate(request.name(), request.phone(), request.residentRegistrationNumberFront());
         memberValidate.validatePassword(request.password(), request.phone(), request.birthdate());
 
@@ -38,6 +42,26 @@ public class MemberService {
         return Response.<RegisterResponse>builder()
                 .httpStatus(HttpStatus.CREATED.value())
                 .message("회원가입에 성공했습니다.")
+                .data(responseData)
+                .build();
+    }
+
+    public Response<LoginResponse> login(LoginRequest request) {
+        Member member = memberRepository.findByPhone(request.phone())
+                .orElseThrow(() -> new GlobalException(ErrorCode.NOT_FOUND, "해당 전화번호로 가입된 계정이 없습니다."));
+
+        // 비밀번호가 일치하는가?
+        memberValidate.checkPassword(member, request.password());
+
+        LoginResponse responseData = LoginResponse.builder()
+                .id(member.getId())
+                .name(member.getName())
+                .phone(member.getPhone())
+                .build();
+
+        return Response.<LoginResponse>builder()
+                .httpStatus(HttpStatus.OK.value())
+                .message("로그인에 성공했습니다.")
                 .data(responseData)
                 .build();
     }
