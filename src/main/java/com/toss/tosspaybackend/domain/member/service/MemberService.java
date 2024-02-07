@@ -4,7 +4,6 @@ import com.toss.tosspaybackend.config.security.SecurityProperties;
 import com.toss.tosspaybackend.config.security.jwt.JwtProvider;
 import com.toss.tosspaybackend.config.security.jwt.JwtToken;
 import com.toss.tosspaybackend.domain.member.dto.LoginRequest;
-import com.toss.tosspaybackend.domain.member.dto.LoginResponse;
 import com.toss.tosspaybackend.domain.member.dto.RegisterRequest;
 import com.toss.tosspaybackend.domain.member.dto.RegisterResponse;
 import com.toss.tosspaybackend.domain.member.entity.Member;
