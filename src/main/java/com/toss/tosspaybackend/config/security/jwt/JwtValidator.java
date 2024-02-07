@@ -26,11 +26,10 @@ public class JwtValidator {
     private final Key key;
     private final MemberRepository memberRepository;
 
-    public Authentication getAuthentication(String accessToken, String refreshToken) {
+    public TokenAuthentication getAuthentication(String accessToken, String refreshToken) {
         Collection<GrantedAuthority> authorities = new ArrayList<>();
         authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
 
-        // Refresh Token Validation
         try {
             Claims claims = getTokenBodyClaims(refreshToken);
             // ? 이건 남겨야하나? 검사하면 좋을꺼같긴 한데 쿼리문을 한번 더 쓰는 오버헤드가 있네
