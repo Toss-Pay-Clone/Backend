@@ -46,20 +46,24 @@ public class JwtValidator {
 
             }
 
+            JwtException je = (JwtException) e.getCause();
+            // Access Token 재발급
             if (e.getTokenType().equals(TokenType.ACCESS_TOKEN) &&
-                    getTokenStatus(e, TokenType.ACCESS_TOKEN).equals(TokenStatus.ACCESS_TOKEN_REGENERATION)) {
-                // TODO: 재발급 로직 구현
+                    getTokenStatus(je, TokenType.ACCESS_TOKEN).equals(TokenStatus.ACCESS_TOKEN_REGENERATION)) {
 
+                Member member = memberRepository.findById(refreshTokenClaims.get("id", Long.class))
+                        .orElseThrow(() -> new AccessDeniedException("Invalid Token"));
+
+                return TokenAuthentication.builder()
+                        .authentication(new UsernamePasswordAuthenticationToken(member, "", authorities))
+                        .tokenStatus(TokenStatus.ACCESS_TOKEN_REGENERATION)
+                        .build();
             }
-
-            handleTokenStatus(getTokenStatus(e, e.getTokenType()));
+            handleTokenStatus(getTokenStatus(je, e.getTokenType()));
         } catch (Exception e) {
             log.error("JWT Exception", e);
         }
 
-//        return TokenAuthentication.builder()
-//                .authentication(new UsernamePasswordAuthenticationToken(member, "", authorities))
-//                .tokenStatus(tokenStatus)
         return null;
     }
 
