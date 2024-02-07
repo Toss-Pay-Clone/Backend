@@ -77,8 +77,8 @@ public class MemberService {
         Cookie accessToken = new Cookie(securityProperties.getAccessHeader(), jwtToken.accessToken());
         Cookie refreshToken = new Cookie(securityProperties.getRefreshHeader(), jwtToken.refreshToken());
 
-        accessToken.setMaxAge(securityProperties.getAccessTokenValidationSecond());
-        refreshToken.setMaxAge(securityProperties.getRefreshTokenValidationSecond());
+        accessToken.setMaxAge(securityProperties.getAccessTokenValidationMillisecond());
+        refreshToken.setMaxAge(securityProperties.getRefreshTokenValidationMillisecond());
 
         accessToken.setPath("/");
         refreshToken.setPath("/");
