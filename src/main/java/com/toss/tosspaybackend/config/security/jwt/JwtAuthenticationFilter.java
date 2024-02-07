@@ -65,14 +65,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             if (tokenAuthentication.tokenStatus().equals(TokenStatus.ACCESS_TOKEN_REGENERATION)) {
                 // Access Token 재발급
-                String refreshedAccessToken = jwtProvider.refreshAccessToken(refreshToken.get());
-                Cookie accessTokenCookie = new Cookie(securityProperties.getAccessHeader(), refreshedAccessToken);
-                accessTokenCookie.setMaxAge(securityProperties.getAccessTokenValidationMillisecond());
-                accessTokenCookie.setPath("/");
-                response.addCookie(accessTokenCookie);
-            }else if (tokenAuthentication.tokenStatus().equals(TokenStatus.REFRESH_TOKEN_REGENERATION)) {
-                // Refresh Token 재발급
+                String refreshedToken = jwtProvider.refreshJWTToken(refreshToken.get(), TokenType.ACCESS_TOKEN);
+                addCookie(response, refreshedToken, securityProperties.getAccessHeader(),
+                        securityProperties.getAccessTokenValidationMillisecond());
 
+            } else if (tokenAuthentication.tokenStatus().equals(TokenStatus.REFRESH_TOKEN_REGENERATION)) {
+                // Refresh Token 재발급
+                String refreshedToken = jwtProvider.refreshJWTToken(refreshToken.get(), TokenType.REFRESH_TOKEN);
+                addCookie(response, refreshedToken, securityProperties.getRefreshHeader(),
+                        securityProperties.getRefreshTokenValidationMillisecond());
             }
 
             SecurityContextHolder.getContext().setAuthentication(tokenAuthentication.authentication());
@@ -83,6 +84,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throw new RuntimeException(e);
         }
 
+    }
+
+    private void addCookie(HttpServletResponse response, String token, String header, int validationMillisecond) {
+        Cookie tokenCookie = new Cookie(header, token);
+        tokenCookie.setMaxAge(validationMillisecond);
+        tokenCookie.setPath("/");
+        response.addCookie(tokenCookie);
     }
 
     private String extractToken(Cookie[] cookies, TokenType tokenType) {
