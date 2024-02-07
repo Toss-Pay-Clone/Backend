@@ -59,6 +59,8 @@ public class JwtValidator {
             if (tokenStatus == TokenStatus.ACCESS_TOKEN_REGENERATION) {
                 // TODO: 재발급 로직 구현
             }
+            
+            handleTokenStatus(tokenStatus);
         } catch (Exception e) {
             log.error("JWT Exception", e);
         }
@@ -87,6 +89,14 @@ public class JwtValidator {
         } else {
             // TODO: Token이 잘못 생성된 경우나 위변조의 경우가 있어 Log생성
             return TokenStatus.INVALID;
+        }
+    }
+
+    private void handleTokenStatus(TokenStatus status) {
+        switch (status) {
+            case EXPIRED -> throw new AccessDeniedException("Expired Token");
+            case FORGED -> throw new AccessDeniedException("Forged Token");
+            case INVALID -> throw new AccessDeniedException("Invalid Token");
         }
     }
 }
