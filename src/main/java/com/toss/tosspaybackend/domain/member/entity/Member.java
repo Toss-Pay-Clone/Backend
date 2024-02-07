@@ -8,6 +8,7 @@ import com.toss.tosspaybackend.global.basetime.Auditable;
 import com.toss.tosspaybackend.global.basetime.BaseTime;
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
 
@@ -35,6 +36,7 @@ public class Member implements Auditable {
     private MobileCarrier mobileCarrier;
     private LocalDateTime birthdate;
 
+    @Setter
     private String password;
 
     @Setter
@@ -59,12 +61,12 @@ public class Member implements Auditable {
 
     public static Member of(String name, String phone, Gender gender, String password, Nationality nationality,
                             String residentRegistrationNumberFront, String residentRegistrationNumberBack,
-                            MobileCarrier mobileCarrier, LocalDateTime birthdate) {
+                            MobileCarrier mobileCarrier, LocalDateTime birthdate, PasswordEncoder passwordEncoder) {
         return Member.builder()
                 .name(name)
                 .phone(phone)
                 .gender(gender)
-                .password(password)
+                .password(passwordEncoder.encode(password))
                 .nationality(nationality)
                 .residentRegistrationNumberFront(residentRegistrationNumberFront)
                 .residentRegistrationNumberBack(residentRegistrationNumberBack)
