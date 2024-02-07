@@ -3,14 +3,15 @@ package com.toss.tosspaybackend.domain.member.service;
 import com.toss.tosspaybackend.config.security.SecurityProperties;
 import com.toss.tosspaybackend.config.security.jwt.JwtProvider;
 import com.toss.tosspaybackend.config.security.jwt.JwtToken;
-import com.toss.tosspaybackend.domain.member.dto.LoginRequest;
-import com.toss.tosspaybackend.domain.member.dto.RegisterRequest;
-import com.toss.tosspaybackend.domain.member.dto.RegisterResponse;
+import com.toss.tosspaybackend.domain.member.dto.*;
 import com.toss.tosspaybackend.domain.member.entity.Member;
 import com.toss.tosspaybackend.domain.member.repository.MemberRepository;
 import com.toss.tosspaybackend.domain.member.service.validate.MemberValidate;
 import com.toss.tosspaybackend.global.Response;
 import com.toss.tosspaybackend.global.exception.ErrorCode;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.security.crypto.encrypt.Encryptors;
+import org.springframework.security.crypto.encrypt.TextEncryptor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import com.toss.tosspaybackend.global.exception.GlobalException;
 import jakarta.servlet.http.Cookie;
@@ -70,6 +71,28 @@ public class MemberService {
                 .httpStatus(HttpStatus.OK.value())
                 .message("로그인에 성공했습니다.")
                 .data(jwtToken)
+                .build();
+    }
+
+    @Transactional(readOnly = true)
+    public Response<ExistenceCheckResponse> existenceCheck(ExistenceCheckRequest request, HttpServletResponse response) {
+
+        boolean isExistsByPhone = memberRepository.existsByPhone(request.phone());
+        if (!isExistsByPhone) {
+            throw new GlobalException(ErrorCode.NOT_FOUND, "해당 전화번호로 가입된 계정이 없습니다.");
+        }
+
+        TextEncryptor encryptor = Encryptors.text(securityProperties.getEncryptSecretKey(), securityProperties.getEncryptSecretSalt());
+        String encryptedToken = encryptor.encrypt(request.phone());
+        Cookie tokenCookie = new Cookie(securityProperties.getTokenHeader(), encryptedToken);
+        tokenCookie.setPath("/");
+        tokenCookie.setHttpOnly(true);
+        response.addCookie(tokenCookie);
+
+        return Response.<ExistenceCheckResponse>builder()
+                .httpStatus(HttpStatus.CREATED.value())
+                .message("해당 전화번호로 가입된 계정이 존재합니다.")
+                .data(new ExistenceCheckResponse(encryptedToken))
                 .build();
     }
 

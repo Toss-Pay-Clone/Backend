@@ -17,4 +17,8 @@ public class SecurityProperties {
     private int refreshTokenValidationMillisecond;
     private String accessHeader;
     private String refreshHeader;
+    private String tokenHeader;
+    private String encryptSecretKey;
+    private String encryptSecretSalt;
+    private String encryptTokenValidationMillisecond;
 }
