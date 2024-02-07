@@ -48,7 +48,7 @@ public class MemberService {
                 .build();
     }
 
-    public Response<LoginResponse> login(LoginRequest request) {
+    @Transactional(readOnly = true)
         Member member = memberRepository.findByPhone(request.phone())
                 .orElseThrow(() -> new GlobalException(ErrorCode.NOT_FOUND, "해당 전화번호로 가입된 계정이 없습니다."));
 
