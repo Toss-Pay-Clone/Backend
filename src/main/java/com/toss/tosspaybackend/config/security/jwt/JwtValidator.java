@@ -54,8 +54,11 @@ public class JwtValidator {
             return new UsernamePasswordAuthenticationToken(member, "", authorities);
 
         } catch (JwtException e) {
-            // TODO: 재발급 로직이 들어가야하기 때문에 반환값 필요
-            getTokenStatus(e, TokenType.ACCESS_TOKEN);
+            TokenStatus tokenStatus = getTokenStatus(e, TokenType.ACCESS_TOKEN);
+
+            if (tokenStatus == TokenStatus.ACCESS_TOKEN_REGENERATION) {
+                // TODO: 재발급 로직 구현
+            }
         } catch (Exception e) {
             log.error("JWT Exception", e);
         }
@@ -73,19 +76,17 @@ public class JwtValidator {
 
     private TokenStatus getTokenStatus(JwtException e, TokenType tokenType) {
         if (tokenType == TokenType.ACCESS_TOKEN && e instanceof ExpiredJwtException) {
-            
+            return TokenStatus.ACCESS_TOKEN_REGENERATION;
         }
 
         if (e instanceof ExpiredJwtException) {
-            // Token이 만료된 경우
-            throw new AccessDeniedException("Expired Token");
+            return TokenStatus.EXPIRED;
         } else if (e instanceof MalformedJwtException || e instanceof SignatureException) {
-            // TODO: 위변조 Check 후 차단 로직 구현
-            // Token이 위, 변조된 경우
-            throw new AccessDeniedException("Forged Token");
+            // TODO: 위변조 Check 후 차단 로직 구현 and Log 생성
+            return TokenStatus.FORGED;
         } else {
-            // 그 외 JWT 관련 Exception
-            throw new AccessDeniedException("Invalid Token");
+            // TODO: Token이 잘못 생성된 경우나 위변조의 경우가 있어 Log생성
+            return TokenStatus.INVALID;
         }
     }
 }
