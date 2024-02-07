@@ -14,6 +14,7 @@ import com.toss.tosspaybackend.global.Response;
 import com.toss.tosspaybackend.global.exception.ErrorCode;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import com.toss.tosspaybackend.global.exception.GlobalException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -64,11 +65,26 @@ public class MemberService {
         // 비밀번호가 일치하는가?
         memberValidate.checkPassword(member, request.password(), passwordEncoder);
         JwtToken jwtToken = jwtProvider.createJWTTokens(member);
+        createLoginCookie(jwtToken, response);
 
         return Response.<JwtToken>builder()
                 .httpStatus(HttpStatus.OK.value())
                 .message("로그인에 성공했습니다.")
                 .data(jwtToken)
                 .build();
+    }
+
+    private void createLoginCookie(JwtToken jwtToken, HttpServletResponse response) {
+        Cookie accessToken = new Cookie(securityProperties.getAccessHeader(), jwtToken.accessToken());
+        Cookie refreshToken = new Cookie(securityProperties.getRefreshHeader(), jwtToken.refreshToken());
+
+        accessToken.setMaxAge(securityProperties.getAccessTokenValidationSecond());
+        refreshToken.setMaxAge(securityProperties.getRefreshTokenValidationSecond());
+
+        accessToken.setPath("/");
+        refreshToken.setPath("/");
+
+        response.addCookie(accessToken);
+        response.addCookie(refreshToken);
     }
 }
