@@ -1,6 +1,7 @@
-package com.toss.tosspaybackend.config.security.jwt;
+package com.toss.tosspaybackend.config.security.jwt.exception;
 
 import com.toss.tosspaybackend.config.security.jwt.enums.TokenType;
+import com.toss.tosspaybackend.config.security.jwt.exception.CustomJwtException;
 import lombok.Getter;
 
 @Getter

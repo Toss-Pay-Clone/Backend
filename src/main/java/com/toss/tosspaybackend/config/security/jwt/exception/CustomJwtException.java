@@ -1,4 +1,4 @@
-package com.toss.tosspaybackend.config.security.jwt;
+package com.toss.tosspaybackend.config.security.jwt.exception;
 
 import com.toss.tosspaybackend.config.security.jwt.enums.TokenType;
 import io.jsonwebtoken.JwtException;
