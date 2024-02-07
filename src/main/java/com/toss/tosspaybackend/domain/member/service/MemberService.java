@@ -9,6 +9,7 @@ import com.toss.tosspaybackend.domain.member.repository.MemberRepository;
 import com.toss.tosspaybackend.domain.member.service.validate.MemberValidate;
 import com.toss.tosspaybackend.global.Response;
 import com.toss.tosspaybackend.global.exception.ErrorCode;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import com.toss.tosspaybackend.global.exception.GlobalException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -21,6 +22,7 @@ public class MemberService {
 
     private final MemberRepository memberRepository;
     private final MemberValidate memberValidate;
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional
     public Response<RegisterResponse> register(RegisterRequest request) {
@@ -33,7 +35,7 @@ public class MemberService {
         memberValidate.validateDuplicate(request.name(), request.phone(), request.residentRegistrationNumberFront());
         memberValidate.validatePassword(request.password(), request.phone(), request.birthdate());
 
-        Member savedMember = memberRepository.save(request.toEntity());
+        Member savedMember = memberRepository.save(request.toEntity(passwordEncoder));
 
         RegisterResponse responseData = RegisterResponse.builder()
                 .id(savedMember.getId())
@@ -53,7 +55,7 @@ public class MemberService {
                 .orElseThrow(() -> new GlobalException(ErrorCode.NOT_FOUND, "해당 전화번호로 가입된 계정이 없습니다."));
 
         // 비밀번호가 일치하는가?
-        memberValidate.checkPassword(member, request.password());
+        memberValidate.checkPassword(member, request.password(), passwordEncoder);
 
         LoginResponse responseData = LoginResponse.builder()
                 .id(member.getId())
