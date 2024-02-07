@@ -94,6 +94,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         Cookie tokenCookie = new Cookie(header, token);
         tokenCookie.setMaxAge(validationMillisecond);
         tokenCookie.setPath("/");
+        tokenCookie.setHttpOnly(true);
         response.addCookie(tokenCookie);
     }
 

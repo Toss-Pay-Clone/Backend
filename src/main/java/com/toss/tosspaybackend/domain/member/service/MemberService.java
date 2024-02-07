@@ -82,6 +82,8 @@ public class MemberService {
 
         accessToken.setPath("/");
         refreshToken.setPath("/");
+        accessToken.setHttpOnly(true);
+        refreshToken.setHttpOnly(true);
 
         response.addCookie(accessToken);
         response.addCookie(refreshToken);
