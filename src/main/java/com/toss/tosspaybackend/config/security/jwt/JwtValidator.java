@@ -68,12 +68,16 @@ public class JwtValidator {
         return null;
     }
 
-    private Claims getTokenBodyClaims(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(key)
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
+    private Claims getTokenBodyClaims(String token, TokenType tokenType) {
+        try {
+            return Jwts.parserBuilder()
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+        } catch (JwtException e) {
+            throw new CustomJwtException(tokenType, e);
+        }
     }
 
     private TokenStatus getTokenStatus(JwtException e, TokenType tokenType) {
