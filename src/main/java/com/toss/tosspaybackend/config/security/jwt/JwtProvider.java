@@ -1,6 +1,7 @@
 package com.toss.tosspaybackend.config.security.jwt;
 
 import com.toss.tosspaybackend.config.security.SecurityProperties;
+import com.toss.tosspaybackend.config.security.jwt.enums.TokenType;
 import com.toss.tosspaybackend.domain.member.entity.Member;
 import com.toss.tosspaybackend.domain.member.repository.MemberRepository;
 import com.toss.tosspaybackend.global.exception.ErrorCode;
@@ -34,13 +35,18 @@ public class JwtProvider {
                 .build();
     }
 
-    public String refreshAccessToken(String refreshToken) {
+    public String refreshJWTToken(String refreshToken, TokenType generateTokenType) {
         Claims claims = getTokenBodyClaims(refreshToken);
         Long memberId = claims.get("id", Long.class);
         Member loginMember = memberRepository.findById(memberId)
                 .orElseThrow(() -> new GlobalException(ErrorCode.INTERNAL_SERVER_ERROR, "refreshAccessToken Error."));
 
-        return getToken(loginMember, claims, securityProperties.getAccessTokenValidationMillisecond());
+        if (generateTokenType.equals(TokenType.ACCESS_TOKEN)) {
+            return getToken(loginMember, claims, securityProperties.getAccessTokenValidationMillisecond());
+        } else if (generateTokenType.equals(TokenType.REFRESH_TOKEN)) {
+            return getToken(loginMember, claims, securityProperties.getRefreshTokenValidationMillisecond());
+        }
+        return null;
     }
 
     private Claims getTokenBodyClaims(String token) {
