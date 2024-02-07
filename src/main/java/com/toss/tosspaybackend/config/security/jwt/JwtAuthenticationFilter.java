@@ -1,13 +1,15 @@
 package com.toss.tosspaybackend.config.security.jwt;
 
 import com.toss.tosspaybackend.config.security.SecurityProperties;
+import com.toss.tosspaybackend.config.security.jwt.enums.TokenStatus;
+import com.toss.tosspaybackend.config.security.jwt.enums.TokenType;
 import com.toss.tosspaybackend.global.exception.CustomAccessDeniedHandler;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.beans.factory.annotation.Value;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -18,18 +20,22 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Optional;
 
+@Slf4j
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtValidator jwtValidator;
     private final SecurityProperties securityProperties;
     private final CustomAccessDeniedHandler customAccessDeniedHandler;
+    private final JwtProvider jwtProvider;
 
     public JwtAuthenticationFilter(JwtValidator jwtValidator,
                                    SecurityProperties securityProperties,
-                                   CustomAccessDeniedHandler customAccessDeniedHandler) {
+                                   CustomAccessDeniedHandler customAccessDeniedHandler,
+                                   JwtProvider jwtProvider) {
         this.jwtValidator = jwtValidator;
         this.securityProperties = securityProperties;
         this.customAccessDeniedHandler = customAccessDeniedHandler;
+        this.jwtProvider = jwtProvider;
     }
 
     @Override
