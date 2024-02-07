@@ -31,39 +31,35 @@ public class JwtValidator {
         authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
 
         try {
-            Claims claims = getTokenBodyClaims(refreshToken);
-            // ? 이건 남겨야하나? 검사하면 좋을꺼같긴 한데 쿼리문을 한번 더 쓰는 오버헤드가 있네
-            if (!memberRepository.existsById(claims.get("id", Long.class))) {
+            Claims refreshTokenClaims = getTokenBodyClaims(refreshToken, TokenType.REFRESH_TOKEN);
+            Claims accessTokenClaims = getTokenBodyClaims(accessToken, TokenType.ACCESS_TOKEN);
+
+            if (!accessTokenClaims.get("id", Long.class).equals(refreshTokenClaims.get("id", Long.class))) {
                 throw new AccessDeniedException("Invalid Token");
             }
-            // TODO: Refresh Token 만료 시간 검사 후 얼마 안남았으면 재발급
-        } catch (JwtException e) {
-            // TODO: 재발급 로직이 들어갈 수 도 있음
-            getTokenStatus(e, TokenType.REFRESH_TOKEN);
-        } catch (Exception e) {
-            log.error("JWT Exception", e);
-        }
 
-        // Access Token Validation
-        try {
-            Claims claims = getTokenBodyClaims(accessToken);
-            Member member = memberRepository.findById(claims.get("id", Long.class))
+            Member member = memberRepository.findById(accessTokenClaims.get("id", Long.class))
                     .orElseThrow(() -> new AccessDeniedException("Invalid Token"));
-
-            return new UsernamePasswordAuthenticationToken(member, "", authorities);
-
-        } catch (JwtException e) {
-            TokenStatus tokenStatus = getTokenStatus(e, TokenType.ACCESS_TOKEN);
-
-            if (tokenStatus == TokenStatus.ACCESS_TOKEN_REGENERATION) {
+        } catch (CustomJwtException e) {
+            if (e.getTokenType().equals(TokenType.REFRESH_TOKEN)) {
                 // TODO: 재발급 로직 구현
+
             }
 
-            handleTokenStatus(tokenStatus);
+            if (e.getTokenType().equals(TokenType.ACCESS_TOKEN) &&
+                    getTokenStatus(e, TokenType.ACCESS_TOKEN).equals(TokenStatus.ACCESS_TOKEN_REGENERATION)) {
+                // TODO: 재발급 로직 구현
+
+            }
+
+            handleTokenStatus(getTokenStatus(e, e.getTokenType()));
         } catch (Exception e) {
             log.error("JWT Exception", e);
         }
 
+//        return TokenAuthentication.builder()
+//                .authentication(new UsernamePasswordAuthenticationToken(member, "", authorities))
+//                .tokenStatus(tokenStatus)
         return null;
     }
 
