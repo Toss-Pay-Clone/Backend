@@ -35,11 +35,8 @@ public class JwtProvider {
                 .build();
     }
 
-    public String refreshJWTToken(String refreshToken, TokenType generateTokenType) {
+    public String refreshJWTToken(String refreshToken, Member loginMember, TokenType generateTokenType) {
         Claims claims = getTokenBodyClaims(refreshToken);
-        Long memberId = claims.get("id", Long.class);
-        Member loginMember = memberRepository.findById(memberId)
-                .orElseThrow(() -> new GlobalException(ErrorCode.INTERNAL_SERVER_ERROR, "refreshAccessToken Error."));
 
         if (generateTokenType.equals(TokenType.ACCESS_TOKEN)) {
             return getToken(loginMember, claims, securityProperties.getAccessTokenValidationMillisecond());
