@@ -74,6 +74,12 @@ public class MemberValidate {
     }
     public void validateDuplicate(String name, String phone, String frontRRN) {
         Optional<Member> findPhoneMember = memberRepository.findByPhone(phone);
+        Optional<Member> findDeletedPhoneMember = memberRepository.findByPhoneAndDeleted(phone);
+
+        if (findDeletedPhoneMember.isPresent()) {
+            throw new GlobalException(ErrorCode.CONFLICT, "이미 탈퇴한 사용자입니다. 다른 정보로 가입해주세요.");
+        }
+
         if (findPhoneMember.isPresent()) {
             throw new GlobalException(ErrorCode.CONFLICT, "이미 사용중인 전화번호입니다.");
         }
