@@ -11,7 +11,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -60,40 +59,56 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             customAccessDeniedHandler.handle(request, response, new AccessDeniedException("Token is missing."));
         }
 
+        try {
+            TokenAuthentication tokenAuthentication = jwtValidator.getAuthentication(accessToken.get(), refreshToken.get());
+            log.info("tokenAuthentication -> tokenStatus: " + tokenAuthentication.tokenStatus());
 
-        token.ifPresentOrElse(
-                // isPresent
-                t -> {
-                    try {
-                        Authentication authentication = jwtValidator.getAuthentication(t);
-                        SecurityContextHolder.getContext().setAuthentication(authentication);
-                        filterChain.doFilter(request, response);
-                    } catch (AccessDeniedException ex) {
-                        customAccessDeniedHandler.handle(request, response, ex);
-                    } catch (ServletException | IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                },
-                // isEmpty
-                () -> customAccessDeniedHandler.handle(request, response, new AccessDeniedException("Token is missing."))
-            );
+            if (tokenAuthentication.tokenStatus().equals(TokenStatus.ACCESS_TOKEN_REGENERATION)) {
+                // Access Token 재발급
+                String refreshedAccessToken = jwtProvider.refreshAccessToken(refreshToken.get());
+                Cookie accessTokenCookie = new Cookie(securityProperties.getAccessHeader(), refreshedAccessToken);
+                accessTokenCookie.setMaxAge(securityProperties.getAccessTokenValidationMillisecond());
+                accessTokenCookie.setPath("/");
+                response.addCookie(accessTokenCookie);
+            }else if (tokenAuthentication.tokenStatus().equals(TokenStatus.REFRESH_TOKEN_REGENERATION)) {
+                // Refresh Token 재발급
+
+            }
+
+            SecurityContextHolder.getContext().setAuthentication(tokenAuthentication.authentication());
+            filterChain.doFilter(request, response);
+        } catch (AccessDeniedException ex) {
+            customAccessDeniedHandler.handle(request, response, ex);
+        } catch (ServletException | IOException e) {
+            throw new RuntimeException(e);
+        }
+
     }
 
-    private String extractToken(Cookie[] cookies) {
+    private String extractToken(Cookie[] cookies, TokenType tokenType) {
         if (cookies == null) {
             return null;
         }
 
-        Optional<Cookie> accessCookie = extractAccessToken(cookies);
+        Optional<Cookie> accessCookie = switch (tokenType) {
+            case ACCESS_TOKEN -> extractAccessToken(cookies);
+            case REFRESH_TOKEN -> extractRefreshToken(cookies);
+        };
+
         return accessCookie.map(Cookie::getValue).orElse(null);
     }
 
-    /*
-     * 헤더에 담긴 Access Token 추출
-     */
+    // 헤더에 담긴 Access Token 추출
     private Optional<Cookie> extractAccessToken(Cookie[] cookies) {
         return Arrays.stream(cookies)
                 .filter(cookie -> cookie.getName().equals(securityProperties.getAccessHeader()))
+                .findFirst();
+    }
+
+    // 헤더의 담긴 Refresh Token 추출
+    private Optional<Cookie> extractRefreshToken(Cookie[] cookies) {
+        return Arrays.stream(cookies)
+                .filter(cookie -> cookie.getName().equals(securityProperties.getRefreshHeader()))
                 .findFirst();
     }
 
