@@ -6,6 +6,7 @@ import com.toss.tosspaybackend.domain.member.repository.MemberRepository;
 import com.toss.tosspaybackend.global.exception.ErrorCode;
 import com.toss.tosspaybackend.global.exception.GlobalException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -73,6 +74,12 @@ public class MemberValidate {
     }
     public void validateDuplicate(String name, String phone, String frontRRN) {
         Optional<Member> findPhoneMember = memberRepository.findByPhone(phone);
+        Optional<Member> findDeletedPhoneMember = memberRepository.findByPhoneAndDeleted(phone);
+
+        if (findDeletedPhoneMember.isPresent()) {
+            throw new GlobalException(ErrorCode.CONFLICT, "이미 탈퇴한 사용자입니다. 다른 정보로 가입해주세요.");
+        }
+
         if (findPhoneMember.isPresent()) {
             throw new GlobalException(ErrorCode.CONFLICT, "이미 사용중인 전화번호입니다.");
         }
@@ -107,8 +114,8 @@ public class MemberValidate {
         }
     }
 
-    public void checkPassword(Member member, String password) {
-        if (!member.getPassword().equals(password)) {
+    public void checkPassword(Member member, String password, PasswordEncoder passwordEncoder) {
+        if (!passwordEncoder.matches(password, member.getPassword())) {
             throw new GlobalException(ErrorCode.NOT_FOUND, "비밀번호가 일치하지 않습니다.");
         }
     }

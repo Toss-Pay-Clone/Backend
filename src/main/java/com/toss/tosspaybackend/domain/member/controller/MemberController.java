@@ -1,17 +1,16 @@
 package com.toss.tosspaybackend.domain.member.controller;
 
+import com.toss.tosspaybackend.config.security.jwt.JwtToken;
 import com.toss.tosspaybackend.domain.member.dto.LoginRequest;
-import com.toss.tosspaybackend.domain.member.dto.LoginResponse;
 import com.toss.tosspaybackend.domain.member.dto.RegisterRequest;
 import com.toss.tosspaybackend.domain.member.dto.RegisterResponse;
 import com.toss.tosspaybackend.domain.member.service.MemberService;
 import com.toss.tosspaybackend.global.Response;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
 
 @RequiredArgsConstructor
 @RequestMapping("/api/v1")
@@ -26,7 +25,7 @@ public class MemberController {
     }
 
     @PostMapping("/auth")
-    public Response<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
-        return memberService.login(request);
+    public Response<JwtToken> login(@Valid @RequestBody LoginRequest request, HttpServletResponse response) {
+        return memberService.login(request, response);
     }
 }
