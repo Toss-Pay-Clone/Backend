@@ -3,6 +3,7 @@ package com.toss.tosspaybackend.config.security.jwt;
 import com.toss.tosspaybackend.config.security.SecurityProperties;
 import com.toss.tosspaybackend.config.security.jwt.enums.TokenStatus;
 import com.toss.tosspaybackend.config.security.jwt.enums.TokenType;
+import com.toss.tosspaybackend.domain.member.entity.Member;
 import com.toss.tosspaybackend.global.exception.CustomAccessDeniedHandler;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -42,6 +43,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         String requestULI = request.getRequestURI();
+
         // ! 이미 access_token을 가지고 login이나 register를 할 경우에도 JWT Filter를 거치는 문제 발견
         // Whitelist URI의 경우 JWT 필터를 거치지 않고 스킵
         if (isWhiteListed(requestULI)) {
@@ -65,13 +67,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             if (tokenAuthentication.tokenStatus().equals(TokenStatus.ACCESS_TOKEN_REGENERATION)) {
                 // Access Token 재발급
-                String refreshedToken = jwtProvider.refreshJWTToken(refreshToken.get(), TokenType.ACCESS_TOKEN);
+                Member member = (Member) tokenAuthentication.authentication().getPrincipal();
+                String refreshedToken = jwtProvider.refreshJWTToken(refreshToken.get(), member, TokenType.ACCESS_TOKEN);
                 addCookie(response, refreshedToken, securityProperties.getAccessHeader(),
                         securityProperties.getAccessTokenValidationMillisecond());
 
             } else if (tokenAuthentication.tokenStatus().equals(TokenStatus.REFRESH_TOKEN_REGENERATION)) {
                 // Refresh Token 재발급
-                String refreshedToken = jwtProvider.refreshJWTToken(refreshToken.get(), TokenType.REFRESH_TOKEN);
+                Member member = (Member) tokenAuthentication.authentication().getPrincipal();
+                String refreshedToken = jwtProvider.refreshJWTToken(refreshToken.get(), member, TokenType.REFRESH_TOKEN);
                 addCookie(response, refreshedToken, securityProperties.getRefreshHeader(),
                         securityProperties.getRefreshTokenValidationMillisecond());
             }
