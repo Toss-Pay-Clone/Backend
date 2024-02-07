@@ -13,6 +13,7 @@ import com.toss.tosspaybackend.global.exception.GlobalException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
 @Service
@@ -21,6 +22,7 @@ public class MemberService {
     private final MemberRepository memberRepository;
     private final MemberValidate memberValidate;
 
+    @Transactional
     public Response<RegisterResponse> register(RegisterRequest request) {
 
         memberValidate.validatePhoneNumber(request.phone());
