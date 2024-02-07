@@ -49,28 +49,14 @@ public class JwtValidator {
         } catch (CustomJwtException e) {
             // Refresh Token 재발급
             if (e.getCause() instanceof RefreshTokenHalfExpiredException hex) {
-                // Method 분리
-                Member member = memberRepository.findById(hex.getMemberId())
-                        .orElseThrow(() -> new AccessDeniedException("Invalid Token: non-existent user"));
-
-                return TokenAuthentication.builder()
-                        .authentication(new UsernamePasswordAuthenticationToken(member, "", authorities))
-                        .tokenStatus(TokenStatus.REFRESH_TOKEN_REGENERATION)
-                        .build();
+                return refreshToken(hex.getMemberId(), authorities, TokenStatus.REFRESH_TOKEN_REGENERATION);
             }
 
             JwtException je = (JwtException) e.getCause();
             // Access Token 재발급
             if (e.getTokenType().equals(TokenType.ACCESS_TOKEN) &&
                     getTokenStatus(je, TokenType.ACCESS_TOKEN).equals(TokenStatus.ACCESS_TOKEN_REGENERATION)) {
-
-                Member member = memberRepository.findById(refreshTokenClaims.get("id", Long.class))
-                        .orElseThrow(() -> new AccessDeniedException("Invalid Token: non-existent user"));
-
-                return TokenAuthentication.builder()
-                        .authentication(new UsernamePasswordAuthenticationToken(member, "", authorities))
-                        .tokenStatus(TokenStatus.ACCESS_TOKEN_REGENERATION)
-                        .build();
+                return refreshToken(refreshTokenClaims.get("id", Long.class), authorities, TokenStatus.ACCESS_TOKEN_REGENERATION);
             }
             handleTokenStatus(getTokenStatus(je, e.getTokenType()));
         } catch (Exception e) {
@@ -80,7 +66,15 @@ public class JwtValidator {
         return null;
     }
 
+    private TokenAuthentication refreshToken(Long memberId, Collection<GrantedAuthority> authorities, TokenStatus tokenStatus) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new AccessDeniedException("Invalid Token: non-existent user"));
 
+        return TokenAuthentication.builder()
+                .authentication(new UsernamePasswordAuthenticationToken(member, "", authorities))
+                .tokenStatus(tokenStatus)
+                .build();
+    }
 
     private Claims getTokenBodyClaims(String token, TokenType tokenType) {
         try {
