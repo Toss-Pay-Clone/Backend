@@ -1,8 +1,13 @@
 package com.toss.tosspaybackend.config.security.jwt;
 
 import com.toss.tosspaybackend.config.security.SecurityProperties;
+import com.toss.tosspaybackend.config.security.jwt.enums.TokenType;
 import com.toss.tosspaybackend.domain.member.entity.Member;
+import com.toss.tosspaybackend.domain.member.repository.MemberRepository;
+import com.toss.tosspaybackend.global.exception.ErrorCode;
+import com.toss.tosspaybackend.global.exception.GlobalException;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.RequiredArgsConstructor;
@@ -16,18 +21,36 @@ import java.util.Date;
 public class JwtProvider {
     private final Key key;
     private final SecurityProperties securityProperties;
+    private final MemberRepository memberRepository;
 
     public JwtToken createJWTTokens(Member loginMember) {
         Claims claims = getClaims(loginMember);
 
-        String accessToken = getToken(loginMember, claims, securityProperties.getAccessTokenValidationSecond());
-        String refreshToken = getToken(loginMember, claims, securityProperties.getRefreshTokenValidationSecond());
+        String accessToken = getToken(loginMember, claims, securityProperties.getAccessTokenValidationMillisecond());
+        String refreshToken = getToken(loginMember, claims, securityProperties.getRefreshTokenValidationMillisecond());
 
         return JwtToken.builder()
                 .grantType("bearer")
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .build();
+    }
+
+    public String refreshAccessToken(String refreshToken) {
+        Claims claims = getTokenBodyClaims(refreshToken);
+        Long memberId = claims.get("id", Long.class);
+        Member loginMember = memberRepository.findById(memberId)
+                .orElseThrow(() -> new GlobalException(ErrorCode.INTERNAL_SERVER_ERROR, "refreshAccessToken Error."));
+
+        return getToken(loginMember, claims, securityProperties.getAccessTokenValidationMillisecond());
+    }
+
+    private Claims getTokenBodyClaims(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
     }
 
     private Claims getClaims(Member loginMember) {
