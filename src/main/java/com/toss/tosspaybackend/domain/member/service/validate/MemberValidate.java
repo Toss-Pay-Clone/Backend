@@ -6,6 +6,7 @@ import com.toss.tosspaybackend.domain.member.repository.MemberRepository;
 import com.toss.tosspaybackend.global.exception.ErrorCode;
 import com.toss.tosspaybackend.global.exception.GlobalException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -107,8 +108,8 @@ public class MemberValidate {
         }
     }
 
-    public void checkPassword(Member member, String password) {
-        if (!member.getPassword().equals(password)) {
+    public void checkPassword(Member member, String password, PasswordEncoder passwordEncoder) {
+        if (!passwordEncoder.matches(password, member.getPassword())) {
             throw new GlobalException(ErrorCode.NOT_FOUND, "비밀번호가 일치하지 않습니다.");
         }
     }
