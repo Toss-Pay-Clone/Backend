@@ -5,7 +5,6 @@ import com.toss.tosspaybackend.domain.member.enums.Gender;
 import com.toss.tosspaybackend.domain.member.enums.MobileCarrier;
 import com.toss.tosspaybackend.domain.member.enums.Nationality;
 import jakarta.validation.constraints.NotNull;
-import lombok.Setter;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
