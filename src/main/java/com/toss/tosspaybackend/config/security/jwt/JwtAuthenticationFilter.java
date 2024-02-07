@@ -52,8 +52,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         // 이후 Request Debugging을 위해 남겨둠
         // System.out.println(requestULI);
-        Optional<String> token = Optional.ofNullable(extractToken(request.getCookies()));
+        Optional<String> accessToken = Optional.ofNullable(extractToken(request.getCookies(), TokenType.ACCESS_TOKEN));
+        Optional<String> refreshToken = Optional.ofNullable(extractToken(request.getCookies(), TokenType.REFRESH_TOKEN));
 
+        // 토큰이 두개 중 한개라도 존재하지 않을 경우 에러
+        if (accessToken.isEmpty() || refreshToken.isEmpty()) {
+            customAccessDeniedHandler.handle(request, response, new AccessDeniedException("Token is missing."));
+        }
 
 
         token.ifPresentOrElse(
