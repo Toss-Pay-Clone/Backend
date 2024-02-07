@@ -1,5 +1,7 @@
 package com.toss.tosspaybackend.config.security.jwt;
 
+import com.toss.tosspaybackend.config.security.jwt.enums.TokenStatus;
+import com.toss.tosspaybackend.config.security.jwt.enums.TokenType;
 import com.toss.tosspaybackend.domain.member.entity.Member;
 import com.toss.tosspaybackend.domain.member.repository.MemberRepository;
 import io.jsonwebtoken.*;
@@ -70,5 +72,20 @@ public class JwtValidator {
     }
 
     private TokenStatus getTokenStatus(JwtException e, TokenType tokenType) {
+        if (tokenType == TokenType.ACCESS_TOKEN && e instanceof ExpiredJwtException) {
+            
+        }
+
+        if (e instanceof ExpiredJwtException) {
+            // Token이 만료된 경우
+            throw new AccessDeniedException("Expired Token");
+        } else if (e instanceof MalformedJwtException || e instanceof SignatureException) {
+            // TODO: 위변조 Check 후 차단 로직 구현
+            // Token이 위, 변조된 경우
+            throw new AccessDeniedException("Forged Token");
+        } else {
+            // 그 외 JWT 관련 Exception
+            throw new AccessDeniedException("Invalid Token");
+        }
     }
 }
