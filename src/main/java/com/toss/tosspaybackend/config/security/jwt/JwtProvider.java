@@ -1,13 +1,11 @@
 package com.toss.tosspaybackend.config.security.jwt;
 
 import com.toss.tosspaybackend.config.security.SecurityProperties;
-import com.toss.tosspaybackend.config.security.jwt.enums.TokenType;
 import com.toss.tosspaybackend.domain.member.entity.Member;
 import com.toss.tosspaybackend.domain.member.repository.MemberRepository;
 import com.toss.tosspaybackend.global.exception.ErrorCode;
 import com.toss.tosspaybackend.global.exception.GlobalException;
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.RequiredArgsConstructor;
