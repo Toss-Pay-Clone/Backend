@@ -13,8 +13,8 @@ import org.springframework.context.annotation.Primary;
 @ConfigurationProperties(prefix = "security")
 public class SecurityProperties {
     private String[] authWhitelist;
-    private int accessTokenValidationSecond;
-    private int refreshTokenValidationSecond;
+    private int accessTokenValidationMillisecond;
+    private int refreshTokenValidationMillisecond;
     private String accessHeader;
     private String refreshHeader;
 }
