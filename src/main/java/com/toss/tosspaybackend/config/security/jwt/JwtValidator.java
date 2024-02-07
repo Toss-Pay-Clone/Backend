@@ -39,7 +39,7 @@ public class JwtValidator {
             Claims accessTokenClaims = getTokenBodyClaims(accessToken, TokenType.ACCESS_TOKEN);
 
             if (!accessTokenClaims.get("id", Long.class).equals(refreshTokenClaims.get("id", Long.class))) {
-                throw new AccessDeniedException("Invalid Token");
+                throw new AccessDeniedException("Invalid Token: non-existent user");
             }
 
             return TokenAuthentication.builder()
@@ -49,8 +49,9 @@ public class JwtValidator {
         } catch (CustomJwtException e) {
             // Refresh Token 재발급
             if (e.getCause() instanceof RefreshTokenHalfExpiredException hex) {
+                // Method 분리
                 Member member = memberRepository.findById(hex.getMemberId())
-                        .orElseThrow(() -> new AccessDeniedException("Invalid Token"));
+                        .orElseThrow(() -> new AccessDeniedException("Invalid Token: non-existent user"));
 
                 return TokenAuthentication.builder()
                         .authentication(new UsernamePasswordAuthenticationToken(member, "", authorities))
@@ -64,7 +65,7 @@ public class JwtValidator {
                     getTokenStatus(je, TokenType.ACCESS_TOKEN).equals(TokenStatus.ACCESS_TOKEN_REGENERATION)) {
 
                 Member member = memberRepository.findById(refreshTokenClaims.get("id", Long.class))
-                        .orElseThrow(() -> new AccessDeniedException("Invalid Token"));
+                        .orElseThrow(() -> new AccessDeniedException("Invalid Token: non-existent user"));
 
                 return TokenAuthentication.builder()
                         .authentication(new UsernamePasswordAuthenticationToken(member, "", authorities))
@@ -78,6 +79,8 @@ public class JwtValidator {
 
         return null;
     }
+
+
 
     private Claims getTokenBodyClaims(String token, TokenType tokenType) {
         try {
