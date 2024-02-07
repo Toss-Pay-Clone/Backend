@@ -2,7 +2,6 @@ package com.toss.tosspaybackend.domain.member.controller;
 
 import com.toss.tosspaybackend.config.security.jwt.JwtToken;
 import com.toss.tosspaybackend.domain.member.dto.LoginRequest;
-import com.toss.tosspaybackend.domain.member.dto.LoginResponse;
 import com.toss.tosspaybackend.domain.member.dto.RegisterRequest;
 import com.toss.tosspaybackend.domain.member.dto.RegisterResponse;
 import com.toss.tosspaybackend.domain.member.service.MemberService;
@@ -10,10 +9,8 @@ import com.toss.tosspaybackend.global.Response;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 @RequiredArgsConstructor
 @RequestMapping("/api/v1")
