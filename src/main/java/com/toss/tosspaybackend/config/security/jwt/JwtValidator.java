@@ -1,5 +1,6 @@
 package com.toss.tosspaybackend.config.security.jwt;
 
+import com.toss.tosspaybackend.config.security.SecurityProperties;
 import com.toss.tosspaybackend.config.security.jwt.enums.TokenStatus;
 import com.toss.tosspaybackend.config.security.jwt.enums.TokenType;
 import com.toss.tosspaybackend.domain.member.entity.Member;
@@ -10,7 +11,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
@@ -18,6 +18,7 @@ import org.springframework.stereotype.Component;
 import java.security.Key;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -25,25 +26,34 @@ import java.util.Collection;
 public class JwtValidator {
     private final Key key;
     private final MemberRepository memberRepository;
+    private final SecurityProperties securityProperties;
 
     public TokenAuthentication getAuthentication(String accessToken, String refreshToken) {
         Collection<GrantedAuthority> authorities = new ArrayList<>();
         authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
-
+        Claims refreshTokenClaims = null;
         try {
-            Claims refreshTokenClaims = getTokenBodyClaims(refreshToken, TokenType.REFRESH_TOKEN);
+            refreshTokenClaims = getTokenBodyClaims(refreshToken, TokenType.REFRESH_TOKEN);
             Claims accessTokenClaims = getTokenBodyClaims(accessToken, TokenType.ACCESS_TOKEN);
 
             if (!accessTokenClaims.get("id", Long.class).equals(refreshTokenClaims.get("id", Long.class))) {
                 throw new AccessDeniedException("Invalid Token");
             }
 
-            Member member = memberRepository.findById(accessTokenClaims.get("id", Long.class))
-                    .orElseThrow(() -> new AccessDeniedException("Invalid Token"));
+            return TokenAuthentication.builder()
+                    .authentication(new UsernamePasswordAuthenticationToken(memberRepository.findById(accessTokenClaims.get("id", Long.class)), "", authorities))
+                    .tokenStatus(TokenStatus.VALID)
+                    .build();
         } catch (CustomJwtException e) {
-            if (e.getTokenType().equals(TokenType.REFRESH_TOKEN)) {
-                // TODO: 재발급 로직 구현
+            // Refresh Token 재발급
+            if (e.getCause() instanceof RefreshTokenHalfExpiredException hex) {
+                Member member = memberRepository.findById(hex.getMemberId())
+                        .orElseThrow(() -> new AccessDeniedException("Invalid Token"));
 
+                return TokenAuthentication.builder()
+                        .authentication(new UsernamePasswordAuthenticationToken(member, "", authorities))
+                        .tokenStatus(TokenStatus.REFRESH_TOKEN_REGENERATION)
+                        .build();
             }
 
             JwtException je = (JwtException) e.getCause();
@@ -69,11 +79,22 @@ public class JwtValidator {
 
     private Claims getTokenBodyClaims(String token, TokenType tokenType) {
         try {
-            return Jwts.parserBuilder()
+            Claims claims = Jwts.parserBuilder()
                     .setSigningKey(key)
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
+
+            if (tokenType.equals(TokenType.REFRESH_TOKEN)) {
+                Date expiration = claims.getExpiration();
+                long halfTimeInMs = securityProperties.getRefreshTokenValidationMillisecond() / 2;
+                Date now = new Date();
+
+                if (now.after(new Date(expiration.getTime() - halfTimeInMs))) {
+                    throw new RefreshTokenHalfExpiredException(claims.get("id", Long.class));
+                }
+            }
+            return claims;
         } catch (JwtException e) {
             throw new CustomJwtException(tokenType, e);
         }
