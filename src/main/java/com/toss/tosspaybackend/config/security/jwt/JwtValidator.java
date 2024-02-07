@@ -34,10 +34,10 @@ public class JwtValidator {
         try {
             Claims claims = getTokenBodyClaims(refreshToken);
             // ? 이건 남겨야하나? 검사하면 좋을꺼같긴 한데 쿼리문을 한번 더 쓰는 오버헤드가 있네
-            // TODO: 만약 쓸꺼면 exists 쿼리로 사용
-            // TODO: 만료 시간 검사 후 얼마 안남았으면 재발급
-            Member member = memberRepository.findById(claims.get("id", Long.class))
-                    .orElseThrow(() -> new AccessDeniedException("Invalid Token"));
+            if (!memberRepository.existsById(claims.get("id", Long.class))) {
+                throw new AccessDeniedException("Invalid Token");
+            }
+            // TODO: Refresh Token 만료 시간 검사 후 얼마 안남았으면 재발급
         } catch (JwtException e) {
             // TODO: 재발급 로직이 들어갈 수 도 있음
             getTokenStatus(e, TokenType.REFRESH_TOKEN);
@@ -59,7 +59,7 @@ public class JwtValidator {
             if (tokenStatus == TokenStatus.ACCESS_TOKEN_REGENERATION) {
                 // TODO: 재발급 로직 구현
             }
-            
+
             handleTokenStatus(tokenStatus);
         } catch (Exception e) {
             log.error("JWT Exception", e);
