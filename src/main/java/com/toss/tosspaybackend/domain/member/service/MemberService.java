@@ -67,7 +67,7 @@ public class MemberService {
                 .orElseThrow(() -> new GlobalException(ErrorCode.NOT_FOUND, "해당 전화번호로 가입된 계정이 없습니다."));
 
         // 비밀번호가 일치하는가?
-        memberValidate.checkPassword(member, request.password(), passwordEncoder);
+        memberValidate.checkPassword(member, request.password());
         JwtToken jwtToken = jwtProvider.createJWTTokens(member);
         createLoginCookie(jwtToken, response);
 

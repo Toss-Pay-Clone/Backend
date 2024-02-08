@@ -20,6 +20,7 @@ import java.util.Optional;
 public class MemberValidate {
 
     private final MemberRepository memberRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public void validatePhoneNumber(String phoneNumber) {
         // 전화번호에 010을 포함하고 있으며
