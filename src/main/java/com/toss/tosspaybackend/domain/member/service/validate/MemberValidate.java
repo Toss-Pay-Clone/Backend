@@ -128,4 +128,14 @@ public class MemberValidate {
             throw new GlobalException(ErrorCode.UNAUTHORIZED_REQUEST, "로그인 시도 횟수 초과로 인해 계정이 일시적으로 정지되었습니다.");
         }
     }
+
+    public int updateLoginCount(String token) {
+        String tokenCount = redisUtils.getData(token);
+        if (redisUtils.isExists(tokenCount)) {
+            validateEncryptToken(token);
+        }
+        int count = Integer.parseInt(tokenCount) + 1;
+        redisUtils.setData(token, String.valueOf(count), 1000L * 60 * 10);
+        return count;
+    }
 }
