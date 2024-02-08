@@ -93,7 +93,7 @@ public class MemberValidate {
         }
     }
 
-    public void validatePassword(String password, String phoneNumber, LocalDateTime birthdate) {
+    public void validateRegisterPassword(String password, String phoneNumber, LocalDateTime birthdate) {
         if (!password.matches("^\\d{4}[a-zA-Z]$")) {
             throw new GlobalException(ErrorCode.BAD_REQUEST, "비밀번호 형식이 유효하지 않습니다.");
         }
@@ -117,9 +117,13 @@ public class MemberValidate {
         }
     }
 
-    public void checkPassword(Member member, String password, PasswordEncoder passwordEncoder) {
-        if (!passwordEncoder.matches(password, member.getPassword())) {
-            throw new GlobalException(ErrorCode.NOT_FOUND, "비밀번호가 일치하지 않습니다.");
+    public void checkPassword(String token, String password, String encryptedPassword) {
+        if (!passwordEncoder.matches(password, encryptedPassword)) {
+            int updatedLoginCount = updateLoginCount(token);
+            throw new GlobalException(ErrorCode.UNAUTHORIZED_REQUEST, "비밀번호가 일치하지 않습니다. 현재 시도 횟수: " + updatedLoginCount + "/5 회");
+        }
+    }
+
     public void validateEncryptToken(String token) {
         String tokenData = redisUtils.getData(token);
         if (!redisUtils.isExists(tokenData)) {
