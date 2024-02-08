@@ -92,6 +92,9 @@ public class MemberService {
         tokenCookie.setHttpOnly(true);
         response.addCookie(tokenCookie);
 
+        redisUtils.setData(request.phone(), encryptedToken, 1000L * 60 * 10);
+        redisUtils.setData(encryptedToken, "0", 1000L * 60 * 10);
+
         return Response.<ExistenceCheckResponse>builder()
                 .httpStatus(HttpStatus.CREATED.value())
                 .message("해당 전화번호로 가입된 계정이 존재합니다.")
