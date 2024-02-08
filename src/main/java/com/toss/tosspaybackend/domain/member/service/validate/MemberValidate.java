@@ -5,6 +5,7 @@ import com.toss.tosspaybackend.domain.member.enums.Gender;
 import com.toss.tosspaybackend.domain.member.repository.MemberRepository;
 import com.toss.tosspaybackend.global.exception.ErrorCode;
 import com.toss.tosspaybackend.global.exception.GlobalException;
+import com.toss.tosspaybackend.util.redis.RedisUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -20,6 +21,7 @@ import java.util.Optional;
 public class MemberValidate {
 
     private final MemberRepository memberRepository;
+    private final RedisUtils redisUtils;
     private final PasswordEncoder passwordEncoder;
 
     public void validatePhoneNumber(String phoneNumber) {
@@ -118,6 +120,12 @@ public class MemberValidate {
     public void checkPassword(Member member, String password, PasswordEncoder passwordEncoder) {
         if (!passwordEncoder.matches(password, member.getPassword())) {
             throw new GlobalException(ErrorCode.NOT_FOUND, "비밀번호가 일치하지 않습니다.");
+    public void validateEncryptToken(String token) {
+        String tokenData = redisUtils.getData(token);
+        if (!redisUtils.isExists(tokenData)) {
+            throw new GlobalException(ErrorCode.UNAUTHORIZED_REQUEST, "만료된 토큰 혹은 유효하지 않은 토큰입니다.");
+        } else if (Integer.parseInt(redisUtils.getData(token)) >= 5) {
+            throw new GlobalException(ErrorCode.UNAUTHORIZED_REQUEST, "로그인 시도 횟수 초과로 인해 계정이 일시적으로 정지되었습니다.");
         }
     }
 }
