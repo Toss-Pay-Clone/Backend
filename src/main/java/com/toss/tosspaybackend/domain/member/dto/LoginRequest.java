@@ -5,7 +5,7 @@ import lombok.Builder;
 
 @Builder
 public record LoginRequest(
-        @NotNull String phone,
+        @NotNull String encryptToken,
         @NotNull String password
 ) {
 }
