@@ -9,8 +9,8 @@ import com.toss.tosspaybackend.domain.member.repository.MemberRepository;
 import com.toss.tosspaybackend.domain.member.service.validate.MemberValidate;
 import com.toss.tosspaybackend.global.Response;
 import com.toss.tosspaybackend.global.exception.ErrorCode;
-import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.security.crypto.encrypt.Encryptors;
+import com.toss.tosspaybackend.util.redis.RedisUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import com.toss.tosspaybackend.global.exception.GlobalException;
@@ -21,6 +21,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
+@Slf4j
 @RequiredArgsConstructor
 @Service
 public class MemberService {
@@ -31,6 +34,7 @@ public class MemberService {
     private final JwtProvider jwtProvider;
     private final TextEncryptor textEncryptor;
     private final SecurityProperties securityProperties;
+    private final RedisUtils redisUtils;
 
     @Transactional
     public Response<RegisterResponse> register(RegisterRequest request) {
@@ -41,7 +45,7 @@ public class MemberService {
         memberValidate.validateBirthdate(request.birthdate(), request.residentRegistrationNumberFront(),
                 request.residentRegistrationNumberBack(), request.gender());
         memberValidate.validateDuplicate(request.name(), request.phone(), request.residentRegistrationNumberFront());
-        memberValidate.validatePassword(request.password(), request.phone(), request.birthdate());
+        memberValidate.validateRegisterPassword(request.password(), request.phone(), request.birthdate());
 
         Member savedMember = memberRepository.save(request.toEntity(passwordEncoder));
 
@@ -60,14 +64,31 @@ public class MemberService {
 
     @Transactional(readOnly = true)
     public Response<JwtToken> login(LoginRequest request, HttpServletResponse response) {
-        String decryptedPhone = textEncryptor.decrypt(request.phone());
-        memberValidate.validatePhoneNumber(decryptedPhone);
+        String tokenCount = redisUtils.getData(request.encryptToken());
+        // TODO: 시도 횟수가 5회 이상일 경우 계정 임시 차단 (여기서는 Manual로 진행해야함)(전역 Security Filter 등록 예정)
+        memberValidate.validateEncryptToken(request.encryptToken());
+        // tokenCount가 0인 경우 이후 Logic을 좀더 빠르게 수행하기 위해 password Caching
+        if (tokenCount.equals("0")) {
+            String decryptedPhone = textEncryptor.decrypt(request.encryptToken());
+            Member member = memberRepository.findByPhone(decryptedPhone)
+                    .orElseThrow(() -> new GlobalException(ErrorCode.INTERNAL_SERVER_ERROR, "해당 전화번호로 가입된 계정이 없습니다."));
 
-        Member member = memberRepository.findByPhone(decryptedPhone)
-                .orElseThrow(() -> new GlobalException(ErrorCode.NOT_FOUND, "해당 전화번호로 가입된 계정이 없습니다."));
+            // 일치하지 않을 경우에만 Caching
+            try {
+                memberValidate.checkPassword(request.encryptToken(), request.password(), member.getPassword());
+            } catch (GlobalException ge) {
+                redisUtils.setData(request.encryptToken() + "_password", member.getPassword(), 1000L * 60 * 10);
+                throw ge;
+            }
+        }
 
-        // 비밀번호가 일치하는가?
-        memberValidate.checkPassword(member, request.password(), passwordEncoder);
+        if (Integer.parseInt(tokenCount) >= 1) {
+            // Caching된 Password를 이용하여 검증
+            String cachedPassword = redisUtils.getData(request.encryptToken() + "_password");
+            memberValidate.checkPassword(request.encryptToken(), request.password(), cachedPassword);
+        }
+
+        Member member = memberRepository.findByPhone(textEncryptor.decrypt(request.encryptToken())).get();
         JwtToken jwtToken = jwtProvider.createJWTTokens(member);
         createLoginCookie(jwtToken, response);
 
@@ -91,6 +112,9 @@ public class MemberService {
         tokenCookie.setPath("/");
         tokenCookie.setHttpOnly(true);
         response.addCookie(tokenCookie);
+
+        redisUtils.setData(request.phone(), encryptedToken, 1000L * 60 * 10);
+        redisUtils.setData(encryptedToken, "0", 1000L * 60 * 10);
 
         return Response.<ExistenceCheckResponse>builder()
                 .httpStatus(HttpStatus.CREATED.value())
