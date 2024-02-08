@@ -60,7 +60,10 @@ public class MemberService {
 
     @Transactional(readOnly = true)
     public Response<JwtToken> login(LoginRequest request, HttpServletResponse response) {
-        Member member = memberRepository.findByPhone(request.phone())
+        String decryptedPhone = textEncryptor.decrypt(request.phone());
+        memberValidate.validatePhoneNumber(decryptedPhone);
+
+        Member member = memberRepository.findByPhone(decryptedPhone)
                 .orElseThrow(() -> new GlobalException(ErrorCode.NOT_FOUND, "해당 전화번호로 가입된 계정이 없습니다."));
 
         // 비밀번호가 일치하는가?
