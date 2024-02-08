@@ -29,6 +29,7 @@ public class MemberService {
     private final MemberValidate memberValidate;
     private final PasswordEncoder passwordEncoder;
     private final JwtProvider jwtProvider;
+    private final TextEncryptor textEncryptor;
     private final SecurityProperties securityProperties;
 
     @Transactional
@@ -82,8 +83,7 @@ public class MemberService {
             throw new GlobalException(ErrorCode.NOT_FOUND, "해당 전화번호로 가입된 계정이 없습니다.");
         }
 
-        TextEncryptor encryptor = Encryptors.text(securityProperties.getEncryptSecretKey(), securityProperties.getEncryptSecretSalt());
-        String encryptedToken = encryptor.encrypt(request.phone());
+        String encryptedToken = textEncryptor.encrypt(request.phone());
         Cookie tokenCookie = new Cookie(securityProperties.getTokenHeader(), encryptedToken);
         tokenCookie.setPath("/");
         tokenCookie.setHttpOnly(true);
