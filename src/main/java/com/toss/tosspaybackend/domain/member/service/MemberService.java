@@ -148,8 +148,9 @@ public class MemberService {
         String preLoginCount = redisUtils.getData(preLoginToken);
         String preLoginEncryptPassword = redisUtils.getData(preLoginToken + "_password");
 
-        redisUtils.deleteData(preLoginEncryptPassword);
+        redisUtils.deleteData(preLoginToken + "_password");
         redisUtils.deleteData(preLoginCount);
         redisUtils.deleteData(preLoginToken);
+        redisUtils.deleteData(phone);
     }
 }
