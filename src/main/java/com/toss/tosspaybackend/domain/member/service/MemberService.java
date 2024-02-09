@@ -92,6 +92,7 @@ public class MemberService {
         JwtToken jwtToken = jwtProvider.createJWTTokens(member);
 
         expirePreLoginToken(textEncryptor.decrypt(request.encryptToken()));
+        deletePreLoginCookie(response);
         createLoginCookie(jwtToken, response);
 
         return Response.<JwtToken>builder()
@@ -154,7 +155,6 @@ public class MemberService {
     }
 
     private void deletePreLoginCookie(HttpServletResponse response) {
-        // encrypt_token
         Cookie cookie = new Cookie("encrypt_token", null);
         cookie.setMaxAge(0);
         response.addCookie(cookie);
