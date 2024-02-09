@@ -92,6 +92,7 @@ public class MemberService {
         JwtToken jwtToken = jwtProvider.createJWTTokens(member);
 
         expirePreLoginToken(textEncryptor.decrypt(request.encryptToken()));
+        deletePreLoginCookie(response);
         createLoginCookie(jwtToken, response);
 
         return Response.<JwtToken>builder()
@@ -151,5 +152,11 @@ public class MemberService {
         redisUtils.deleteData(preLoginCount);
         redisUtils.deleteData(preLoginToken);
         redisUtils.deleteData(phone);
+    }
+
+    private void deletePreLoginCookie(HttpServletResponse response) {
+        Cookie cookie = new Cookie("encrypt_token", null);
+        cookie.setMaxAge(0);
+        response.addCookie(cookie);
     }
 }
