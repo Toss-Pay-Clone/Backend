@@ -140,4 +140,14 @@ public class MemberService {
         response.addCookie(accessToken);
         response.addCookie(refreshToken);
     }
+
+    private void expirePreLoginToken(String phone) {
+        String preLoginToken = redisUtils.getData(phone);
+        String preLoginCount = redisUtils.getData(preLoginToken);
+        String preLoginEncryptPassword = redisUtils.getData(preLoginToken + "_password");
+
+        redisUtils.deleteData(preLoginEncryptPassword);
+        redisUtils.deleteData(preLoginCount);
+        redisUtils.deleteData(preLoginToken);
+    }
 }
