@@ -10,6 +10,7 @@ import com.toss.tosspaybackend.domain.member.service.validate.MemberValidate;
 import com.toss.tosspaybackend.global.Response;
 import com.toss.tosspaybackend.global.exception.ErrorCode;
 import com.toss.tosspaybackend.util.redis.RedisUtils;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -21,6 +22,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Arrays;
 import java.util.Optional;
 
 @Slf4j
@@ -63,37 +65,45 @@ public class MemberService {
     }
 
     @Transactional(readOnly = true)
-    public Response<JwtToken> login(LoginRequest request, HttpServletResponse response) {
-        String tokenCount = redisUtils.getData(request.encryptToken());
+    public Response<JwtToken> login(LoginRequest request, HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
+        Cookie[] cookies = httpRequest.getCookies();
+        memberValidate.loginCookieExistsValidate(cookies);
+
+        String encryptToken = Arrays.stream(cookies)
+                .filter(cookie -> cookie.getName().equals(securityProperties.getTokenHeader()))
+                .findFirst().get()
+                .getValue();
+
+        String tokenCount = redisUtils.getData(encryptToken);
         // 시도 횟수가 5회 이상일 경우 계정 임시 차단 (여기서는 Manual로 진행함)(전역 Security Filter 등록 예정)
-        memberValidate.validateEncryptToken(request.encryptToken());
+        memberValidate.validateEncryptToken(encryptToken);
         // tokenCount가 0인 경우 이후 Logic을 좀더 빠르게 수행하기 위해 password Caching
         if (tokenCount.equals("0")) {
-            String decryptedPhone = textEncryptor.decrypt(request.encryptToken());
+            String decryptedPhone = textEncryptor.decrypt(encryptToken);
             Member member = memberRepository.findByPhone(decryptedPhone)
                     .orElseThrow(() -> new GlobalException(ErrorCode.INTERNAL_SERVER_ERROR, "해당 전화번호로 가입된 계정이 없습니다."));
 
             // 일치하지 않을 경우에만 Caching
             try {
-                memberValidate.checkPassword(request.encryptToken(), request.password(), member.getPassword());
+                memberValidate.checkPassword(encryptToken, request.password(), member.getPassword());
             } catch (GlobalException ge) {
-                redisUtils.setData(request.encryptToken() + securityProperties.getPreLoginPasswordSuffix(), member.getPassword(), securityProperties.getPreLoginValidationMillisecond());
+                redisUtils.setData(encryptToken + securityProperties.getPreLoginPasswordSuffix(), member.getPassword(), securityProperties.getPreLoginValidationMillisecond());
                 throw ge;
             }
         }
 
         if (Integer.parseInt(tokenCount) >= 1) {
             // Caching된 Password를 이용하여 검증
-            String cachedPassword = redisUtils.getData(request.encryptToken() + securityProperties.getPreLoginPasswordSuffix());
-            memberValidate.checkPassword(request.encryptToken(), request.password(), cachedPassword);
+            String cachedPassword = redisUtils.getData(encryptToken + securityProperties.getPreLoginPasswordSuffix());
+            memberValidate.checkPassword(encryptToken, request.password(), cachedPassword);
         }
 
-        Member member = memberRepository.findByPhone(textEncryptor.decrypt(request.encryptToken())).get();
+        Member member = memberRepository.findByPhone(textEncryptor.decrypt(encryptToken)).get();
         JwtToken jwtToken = jwtProvider.createJWTTokens(member);
 
-        expirePreLoginToken(textEncryptor.decrypt(request.encryptToken()));
-        deletePreLoginCookie(response);
-        createLoginCookie(jwtToken, response);
+        expirePreLoginToken(textEncryptor.decrypt(encryptToken));
+        deletePreLoginCookie(httpResponse);
+        createLoginCookie(jwtToken, httpResponse);
 
         return Response.<JwtToken>builder()
                 .httpStatus(HttpStatus.OK.value())

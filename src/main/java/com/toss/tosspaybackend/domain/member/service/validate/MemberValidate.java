@@ -7,12 +7,14 @@ import com.toss.tosspaybackend.domain.member.repository.MemberRepository;
 import com.toss.tosspaybackend.global.exception.ErrorCode;
 import com.toss.tosspaybackend.global.exception.GlobalException;
 import com.toss.tosspaybackend.util.redis.RedisUtils;
+import jakarta.servlet.http.Cookie;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -149,6 +151,12 @@ public class MemberValidate {
         String loginToken = redisUtils.getData(phone);
         if (redisUtils.isExists(loginToken)) {
             throw new GlobalException(ErrorCode.CONFLICT, "현재 요청을 처리할 수 없습니다. 잠시 후 다시 시도해주세요.");
+        }
+    }
+
+    public void loginCookieExistsValidate(Cookie[] cookies) {
+        if (cookies == null || Arrays.stream(cookies).noneMatch(cookie -> securityProperties.getTokenHeader().equals(cookie.getName()))) {
+            throw new GlobalException(ErrorCode.BAD_REQUEST, "Bad Request: 요청 형식이 유효하지 않습니다.");
         }
     }
 }
