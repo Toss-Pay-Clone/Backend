@@ -146,7 +146,6 @@ public class MemberService {
     private void expirePreLoginToken(String phone) {
         String preLoginToken = redisUtils.getData(phone);
         String preLoginCount = redisUtils.getData(preLoginToken);
-        String preLoginEncryptPassword = redisUtils.getData(preLoginToken + "_password");
 
         redisUtils.deleteData(preLoginToken + "_password");
         redisUtils.deleteData(preLoginCount);
