@@ -90,6 +90,8 @@ public class MemberService {
 
         Member member = memberRepository.findByPhone(textEncryptor.decrypt(request.encryptToken())).get();
         JwtToken jwtToken = jwtProvider.createJWTTokens(member);
+
+        expirePreLoginToken(textEncryptor.decrypt(request.encryptToken()));
         createLoginCookie(jwtToken, response);
 
         return Response.<JwtToken>builder()
