@@ -23,4 +23,5 @@ public class SecurityProperties {
     private String encryptSecretKey;
     private String encryptSecretSalt;
     private String encryptTokenValidationMillisecond;
+    private long preLoginValidationMillisecond;
 }
