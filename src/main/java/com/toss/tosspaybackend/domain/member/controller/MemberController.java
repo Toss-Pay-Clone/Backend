@@ -4,7 +4,6 @@ import com.toss.tosspaybackend.config.security.jwt.JwtToken;
 import com.toss.tosspaybackend.domain.member.dto.*;
 import com.toss.tosspaybackend.domain.member.service.MemberService;
 import com.toss.tosspaybackend.global.Response;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -31,3 +30,4 @@ public class MemberController {
     public Response<ExistenceCheckResponse> existenceCheck(@Valid @RequestBody ExistenceCheckRequest request, HttpServletResponse response) {
         return memberService.existenceCheck(request, response);
     }
+}
