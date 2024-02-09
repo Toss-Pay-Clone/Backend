@@ -77,14 +77,14 @@ public class MemberService {
             try {
                 memberValidate.checkPassword(request.encryptToken(), request.password(), member.getPassword());
             } catch (GlobalException ge) {
-                redisUtils.setData(request.encryptToken() + "_password", member.getPassword(), securityProperties.getPreLoginValidationMillisecond());
+                redisUtils.setData(request.encryptToken() + securityProperties.getPreLoginPasswordSuffix(), member.getPassword(), securityProperties.getPreLoginValidationMillisecond());
                 throw ge;
             }
         }
 
         if (Integer.parseInt(tokenCount) >= 1) {
             // Caching된 Password를 이용하여 검증
-            String cachedPassword = redisUtils.getData(request.encryptToken() + "_password");
+            String cachedPassword = redisUtils.getData(request.encryptToken() + securityProperties.getPreLoginPasswordSuffix());
             memberValidate.checkPassword(request.encryptToken(), request.password(), cachedPassword);
         }
 
@@ -147,7 +147,7 @@ public class MemberService {
         String preLoginToken = redisUtils.getData(phone);
         String preLoginCount = redisUtils.getData(preLoginToken);
 
-        redisUtils.deleteData(preLoginToken + "_password");
+        redisUtils.deleteData(preLoginToken + securityProperties.getPreLoginPasswordSuffix());
         redisUtils.deleteData(preLoginCount);
         redisUtils.deleteData(preLoginToken);
         redisUtils.deleteData(phone);
