@@ -152,4 +152,11 @@ public class MemberService {
         redisUtils.deleteData(preLoginToken);
         redisUtils.deleteData(phone);
     }
+
+    private void deletePreLoginCookie(HttpServletResponse response) {
+        // encrypt_token
+        Cookie cookie = new Cookie("encrypt_token", null);
+        cookie.setMaxAge(0);
+        response.addCookie(cookie);
+    }
 }
