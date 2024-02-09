@@ -142,4 +142,11 @@ public class MemberValidate {
         redisUtils.setData(token, String.valueOf(count), 1000L * 60 * 10);
         return count;
     }
+
+    public void raceConditionAttackCheck(String phone) {
+        String loginToken = redisUtils.getData(phone);
+        if (redisUtils.isExists(loginToken)) {
+            throw new GlobalException(ErrorCode.CONFLICT, "현재 요청을 처리할 수 없습니다. 잠시 후 다시 시도해주세요.");
+        }
+    }
 }
