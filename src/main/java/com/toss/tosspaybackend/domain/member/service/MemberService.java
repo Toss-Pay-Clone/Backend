@@ -90,6 +90,8 @@ public class MemberService {
 
         Member member = memberRepository.findByPhone(textEncryptor.decrypt(request.encryptToken())).get();
         JwtToken jwtToken = jwtProvider.createJWTTokens(member);
+
+        expirePreLoginToken(textEncryptor.decrypt(request.encryptToken()));
         createLoginCookie(jwtToken, response);
 
         return Response.<JwtToken>builder()
@@ -139,5 +141,16 @@ public class MemberService {
 
         response.addCookie(accessToken);
         response.addCookie(refreshToken);
+    }
+
+    private void expirePreLoginToken(String phone) {
+        String preLoginToken = redisUtils.getData(phone);
+        String preLoginCount = redisUtils.getData(preLoginToken);
+        String preLoginEncryptPassword = redisUtils.getData(preLoginToken + "_password");
+
+        redisUtils.deleteData(preLoginToken + "_password");
+        redisUtils.deleteData(preLoginCount);
+        redisUtils.deleteData(preLoginToken);
+        redisUtils.deleteData(phone);
     }
 }
