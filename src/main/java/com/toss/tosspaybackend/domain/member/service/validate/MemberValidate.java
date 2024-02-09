@@ -1,5 +1,6 @@
 package com.toss.tosspaybackend.domain.member.service.validate;
 
+import com.toss.tosspaybackend.config.security.SecurityProperties;
 import com.toss.tosspaybackend.domain.member.entity.Member;
 import com.toss.tosspaybackend.domain.member.enums.Gender;
 import com.toss.tosspaybackend.domain.member.repository.MemberRepository;
@@ -23,6 +24,7 @@ public class MemberValidate {
     private final MemberRepository memberRepository;
     private final RedisUtils redisUtils;
     private final PasswordEncoder passwordEncoder;
+    private final SecurityProperties securityProperties;
 
     public void validatePhoneNumber(String phoneNumber) {
         // 전화번호에 010을 포함하고 있으며
@@ -139,7 +141,7 @@ public class MemberValidate {
             validateEncryptToken(token);
         }
         int count = Integer.parseInt(tokenCount) + 1;
-        redisUtils.setData(token, String.valueOf(count), 1000L * 60 * 10);
+        redisUtils.setData(token, String.valueOf(count), securityProperties.getPreLoginValidationMillisecond());
         return count;
     }
 
