@@ -65,7 +65,7 @@ public class MemberService {
     @Transactional(readOnly = true)
     public Response<JwtToken> login(LoginRequest request, HttpServletResponse response) {
         String tokenCount = redisUtils.getData(request.encryptToken());
-        // TODO: 시도 횟수가 5회 이상일 경우 계정 임시 차단 (여기서는 Manual로 진행해야함)(전역 Security Filter 등록 예정)
+        // 시도 횟수가 5회 이상일 경우 계정 임시 차단 (여기서는 Manual로 진행함)(전역 Security Filter 등록 예정)
         memberValidate.validateEncryptToken(request.encryptToken());
         // tokenCount가 0인 경우 이후 Logic을 좀더 빠르게 수행하기 위해 password Caching
         if (tokenCount.equals("0")) {
@@ -77,7 +77,7 @@ public class MemberService {
             try {
                 memberValidate.checkPassword(request.encryptToken(), request.password(), member.getPassword());
             } catch (GlobalException ge) {
-                redisUtils.setData(request.encryptToken() + "_password", member.getPassword(), 1000L * 60 * 10);
+                redisUtils.setData(request.encryptToken() + "_password", member.getPassword(), securityProperties.getPreLoginValidationMillisecond());
                 throw ge;
             }
         }
@@ -115,8 +115,8 @@ public class MemberService {
         tokenCookie.setHttpOnly(true);
         response.addCookie(tokenCookie);
 
-        redisUtils.setData(request.phone(), encryptedToken, 1000L * 60 * 10);
-        redisUtils.setData(encryptedToken, "0", 1000L * 60 * 10);
+        redisUtils.setData(request.phone(), encryptedToken, securityProperties.getPreLoginValidationMillisecond());
+        redisUtils.setData(encryptedToken, "0", securityProperties.getPreLoginValidationMillisecond());
 
         return Response.<ExistenceCheckResponse>builder()
                 .httpStatus(HttpStatus.CREATED.value())
