@@ -107,6 +107,8 @@ public class MemberService {
             throw new GlobalException(ErrorCode.NOT_FOUND, "해당 전화번호로 가입된 계정이 없습니다.");
         }
 
+        memberValidate.raceConditionAttackCheck(request.phone());
+
         String encryptedToken = textEncryptor.encrypt(request.phone());
         Cookie tokenCookie = new Cookie(securityProperties.getTokenHeader(), encryptedToken);
         tokenCookie.setPath("/");
