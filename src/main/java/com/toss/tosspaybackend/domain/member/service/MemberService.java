@@ -63,7 +63,7 @@ public class MemberService {
     }
 
     @Transactional(readOnly = true)
-    public Response<JwtToken> login(LoginRequest request, HttpServletResponse response) {
+    public Response<JwtToken> login(LoginRequest request, HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
         String tokenCount = redisUtils.getData(request.encryptToken());
         // 시도 횟수가 5회 이상일 경우 계정 임시 차단 (여기서는 Manual로 진행함)(전역 Security Filter 등록 예정)
         memberValidate.validateEncryptToken(request.encryptToken());
