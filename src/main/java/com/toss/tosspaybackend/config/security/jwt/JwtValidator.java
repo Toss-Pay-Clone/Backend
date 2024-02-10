@@ -6,6 +6,7 @@ import com.toss.tosspaybackend.config.security.jwt.enums.TokenType;
 import com.toss.tosspaybackend.config.security.jwt.exception.CustomJwtException;
 import com.toss.tosspaybackend.config.security.jwt.exception.RefreshTokenHalfExpiredException;
 import com.toss.tosspaybackend.domain.member.entity.Member;
+import com.toss.tosspaybackend.domain.member.enums.Role;
 import com.toss.tosspaybackend.domain.member.repository.MemberRepository;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.SignatureException;
@@ -21,6 +22,7 @@ import java.security.Key;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -31,8 +33,6 @@ public class JwtValidator {
     private final SecurityProperties securityProperties;
 
     public TokenAuthentication getAuthentication(String accessToken, String refreshToken) {
-        Collection<GrantedAuthority> authorities = new ArrayList<>();
-        authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
         Claims refreshTokenClaims = null;
         try {
             refreshTokenClaims = getTokenBodyClaims(refreshToken, TokenType.REFRESH_TOKEN);
@@ -42,23 +42,41 @@ public class JwtValidator {
                 throw new AccessDeniedException("Invalid Token: non-existent user");
             }
 
+            Long memberId = accessTokenClaims.get("id", Long.class);
+            Member member = memberRepository.findById(memberId).get();
+            Collection<GrantedAuthority> authorities = member.getRole().stream()
+                    .map(Role::asGrantedAuthority)
+                    .collect(Collectors.toList());
+
             return TokenAuthentication.builder()
-                    .authentication(new UsernamePasswordAuthenticationToken(memberRepository.findById(accessTokenClaims.get("id", Long.class)), "", authorities))
+                    .authentication(new UsernamePasswordAuthenticationToken(member, "", authorities))
                     .tokenStatus(TokenStatus.VALID)
                     .build();
         } catch (CustomJwtException e) {
+            JwtException je = (JwtException) e.getCause();
+            handleTokenStatus(getTokenStatus(je, e.getTokenType()));
+
             // Refresh Token 재발급
             if (e.getCause() instanceof RefreshTokenHalfExpiredException hex) {
+                Member member = memberRepository.findById(hex.getMemberId()).get();
+                Collection<GrantedAuthority> authorities = member.getRole().stream()
+                        .map(Role::asGrantedAuthority)
+                        .collect(Collectors.toList());
+
                 return refreshToken(hex.getMemberId(), authorities, TokenStatus.REFRESH_TOKEN_REGENERATION);
             }
 
-            JwtException je = (JwtException) e.getCause();
             // Access Token 재발급
             if (e.getTokenType().equals(TokenType.ACCESS_TOKEN) &&
                     getTokenStatus(je, TokenType.ACCESS_TOKEN).equals(TokenStatus.ACCESS_TOKEN_REGENERATION)) {
-                return refreshToken(refreshTokenClaims.get("id", Long.class), authorities, TokenStatus.ACCESS_TOKEN_REGENERATION);
+                Long memberId = refreshTokenClaims.get("id", Long.class);
+                Member member = memberRepository.findById(memberId).get();
+                Collection<GrantedAuthority> authorities = member.getRole().stream()
+                        .map(Role::asGrantedAuthority)
+                        .collect(Collectors.toList());
+
+                return refreshToken(member.getId(), authorities, TokenStatus.ACCESS_TOKEN_REGENERATION);
             }
-            handleTokenStatus(getTokenStatus(je, e.getTokenType()));
         } catch (Exception e) {
             log.error("JWT Exception", e);
         }
@@ -66,7 +84,7 @@ public class JwtValidator {
         return null;
     }
 
-    private TokenAuthentication refreshToken(Long memberId, Collection<GrantedAuthority> authorities, TokenStatus tokenStatus) {
+    private TokenAuthentication refreshToken(Long memberId, Collection<? extends GrantedAuthority> authorities, TokenStatus tokenStatus) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new AccessDeniedException("Invalid Token: non-existent user"));
 
