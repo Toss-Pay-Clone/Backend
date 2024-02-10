@@ -22,7 +22,7 @@ public class SecurityProperties {
     private String tokenHeader;
     private String encryptSecretKey;
     private String encryptSecretSalt;
-    private String encryptTokenValidationMillisecond;
+    private int encryptTokenValidationSecond;
     private long preLoginValidationMillisecond;
     private String preLoginPasswordSuffix;
 }

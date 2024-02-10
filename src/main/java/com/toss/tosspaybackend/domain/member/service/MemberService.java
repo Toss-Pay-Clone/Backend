@@ -23,7 +23,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
-import java.util.Optional;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -125,6 +124,7 @@ public class MemberService {
         String encryptedToken = textEncryptor.encrypt(request.phone());
         Cookie tokenCookie = new Cookie(securityProperties.getTokenHeader(), encryptedToken);
         tokenCookie.setPath("/");
+        tokenCookie.setMaxAge(securityProperties.getEncryptTokenValidationSecond());
         tokenCookie.setHttpOnly(true);
         response.addCookie(tokenCookie);
 
@@ -166,6 +166,7 @@ public class MemberService {
 
     private void deletePreLoginCookie(HttpServletResponse response) {
         Cookie cookie = new Cookie("encrypt_token", null);
+        cookie.setPath("/");
         cookie.setMaxAge(0);
         response.addCookie(cookie);
     }

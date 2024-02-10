@@ -3,6 +3,7 @@ package com.toss.tosspaybackend.domain.member.entity;
 import com.toss.tosspaybackend.domain.member.enums.Gender;
 import com.toss.tosspaybackend.domain.member.enums.MobileCarrier;
 import com.toss.tosspaybackend.domain.member.enums.Nationality;
+import com.toss.tosspaybackend.domain.member.enums.Role;
 import com.toss.tosspaybackend.global.basetime.AuditListener;
 import com.toss.tosspaybackend.global.basetime.Auditable;
 import com.toss.tosspaybackend.global.basetime.BaseTime;
@@ -13,6 +14,8 @@ import org.hibernate.annotations.Where;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -38,6 +41,10 @@ public class Member implements Auditable {
     @Enumerated(EnumType.STRING)
     private MobileCarrier mobileCarrier;
     private LocalDateTime birthdate;
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @Enumerated(EnumType.STRING)
+    private List<Role> role = new ArrayList<>(List.of(Role.ROLE_USER));
 
     @Setter
     private String password;
