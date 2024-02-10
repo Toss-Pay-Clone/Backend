@@ -46,6 +46,9 @@ public class Member implements Auditable {
     @Enumerated(EnumType.STRING)
     private List<Role> role = new ArrayList<>(List.of(Role.ROLE_USER));
 
+    @Enumerated(EnumType.STRING)
+    private AccountStatus accountStatus;
+
     @Setter
     private String password;
 
@@ -67,6 +70,7 @@ public class Member implements Auditable {
         this.residentRegistrationNumberBack = residentRegistrationNumberBack;
         this.mobileCarrier = mobileCarrier;
         this.birthdate = birthdate;
+        this.accountStatus = AccountStatus.ACTIVE;
     }
 
     public static Member of(String name, String phone, Gender gender, String password, Nationality nationality,
