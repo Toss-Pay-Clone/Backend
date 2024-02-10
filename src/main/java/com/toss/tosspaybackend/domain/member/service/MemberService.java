@@ -65,7 +65,7 @@ public class MemberService {
     }
 
     @Transactional(readOnly = true)
-    public Response<JwtToken> login(LoginRequest request, HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
+    public Response<String> login(LoginRequest request, HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
         Cookie[] cookies = httpRequest.getCookies();
         memberValidate.loginCookieExistsValidate(cookies);
 
@@ -105,10 +105,10 @@ public class MemberService {
         deletePreLoginCookie(httpResponse);
         createLoginCookie(jwtToken, httpResponse);
 
-        return Response.<JwtToken>builder()
+        return Response.<String>builder()
                 .httpStatus(HttpStatus.OK.value())
                 .message("로그인에 성공했습니다.")
-                .data(jwtToken)
+                .data("시스템에 접속 가능한 상태입니다.")
                 .build();
     }
 
