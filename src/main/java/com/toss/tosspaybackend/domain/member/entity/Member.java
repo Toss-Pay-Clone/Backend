@@ -1,9 +1,6 @@
 package com.toss.tosspaybackend.domain.member.entity;
 
-import com.toss.tosspaybackend.domain.member.enums.Gender;
-import com.toss.tosspaybackend.domain.member.enums.MobileCarrier;
-import com.toss.tosspaybackend.domain.member.enums.Nationality;
-import com.toss.tosspaybackend.domain.member.enums.Role;
+import com.toss.tosspaybackend.domain.member.enums.*;
 import com.toss.tosspaybackend.global.basetime.AuditListener;
 import com.toss.tosspaybackend.global.basetime.Auditable;
 import com.toss.tosspaybackend.global.basetime.BaseTime;
