@@ -28,7 +28,7 @@ public class MemberController {
     }
 
     @PostMapping("/existence-check")
-    public Response<ExistenceCheckResponse> existenceCheck(@Valid @RequestBody ExistenceCheckRequest request, HttpServletResponse response) {
+    public Response<String> existenceCheck(@Valid @RequestBody ExistenceCheckRequest request, HttpServletResponse response) {
         return memberService.existenceCheck(request, response);
     }
 }
