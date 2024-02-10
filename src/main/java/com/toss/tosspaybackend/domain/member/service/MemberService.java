@@ -124,6 +124,7 @@ public class MemberService {
         String encryptedToken = textEncryptor.encrypt(request.phone());
         Cookie tokenCookie = new Cookie(securityProperties.getTokenHeader(), encryptedToken);
         tokenCookie.setPath("/");
+        tokenCookie.setMaxAge(securityProperties.getEncryptTokenValidationSecond());
         tokenCookie.setHttpOnly(true);
         response.addCookie(tokenCookie);
 
