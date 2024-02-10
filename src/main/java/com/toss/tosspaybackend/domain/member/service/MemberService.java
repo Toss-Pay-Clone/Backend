@@ -113,7 +113,7 @@ public class MemberService {
     }
 
     @Transactional(readOnly = true)
-    public Response<ExistenceCheckResponse> existenceCheck(ExistenceCheckRequest request, HttpServletResponse response) {
+    public Response<String> existenceCheck(ExistenceCheckRequest request, HttpServletResponse response) {
 
         boolean isExistsByPhone = memberRepository.existsByPhone(request.phone());
         if (!isExistsByPhone) {
@@ -131,10 +131,10 @@ public class MemberService {
         redisUtils.setData(request.phone(), encryptedToken, securityProperties.getPreLoginValidationMillisecond());
         redisUtils.setData(encryptedToken, "0", securityProperties.getPreLoginValidationMillisecond());
 
-        return Response.<ExistenceCheckResponse>builder()
+        return Response.<String>builder()
                 .httpStatus(HttpStatus.CREATED.value())
-                .message("해당 전화번호로 가입된 계정이 존재합니다.")
-                .data(new ExistenceCheckResponse(encryptedToken))
+                .message("전화번호 확인이 완료되었습니다.")
+                .data("이어서 비밀번호 인증을 진행해주세요.")
                 .build();
     }
 
