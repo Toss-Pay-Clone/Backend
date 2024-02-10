@@ -23,7 +23,7 @@ public class MemberController {
     }
 
     @PostMapping
-    public Response<JwtToken> login(@Valid @RequestBody LoginRequest request, HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
+    public Response<String> login(@Valid @RequestBody LoginRequest request, HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
         return memberService.login(request, httpRequest, httpResponse);
     }
 
