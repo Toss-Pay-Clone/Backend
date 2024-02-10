@@ -68,7 +68,7 @@ public class JwtProvider {
                 .setSubject(loginMember.getName())
                 .setClaims(claims)
                 .signWith(key, SignatureAlgorithm.HS256)
-                .setExpiration(new Date(now + validationSecond))
+                .setExpiration(new Date(now + (validationSecond * 1000L)))
                 .compact();
     }
 }
