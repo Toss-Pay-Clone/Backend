@@ -165,6 +165,7 @@ public class MemberService {
 
     private void deletePreLoginCookie(HttpServletResponse response) {
         Cookie cookie = new Cookie("encrypt_token", null);
+        cookie.setPath("/");
         cookie.setMaxAge(0);
         response.addCookie(cookie);
     }
