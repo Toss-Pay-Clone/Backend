@@ -39,6 +39,11 @@ public enum ErrorCode {
     CONFLICT(HttpStatus.CONFLICT, "Conflict."),
 
     /*
+     * 423 LOCKED: 대상 리소스가 잠겨 있음
+     */
+    LOCKED(HttpStatus.LOCKED, "Locked."),
+
+    /*
      * 500 INTERNAL_SERVER_ERROR: 내부 서버 오류
      */
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "Server error.");
