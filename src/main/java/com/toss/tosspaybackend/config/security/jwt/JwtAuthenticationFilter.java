@@ -11,6 +11,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -42,17 +43,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(
             HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
-        String requestULI = request.getRequestURI();
 
-        // ! 이미 access_token을 가지고 login이나 register를 할 경우에도 JWT Filter를 거치는 문제 발견
-        // Whitelist URI의 경우 JWT 필터를 거치지 않고 스킵
+        String requestULI = request.getRequestURI();
         if (isWhiteListed(requestULI)) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        // 이후 Request Debugging을 위해 남겨둠
-        // System.out.println(requestULI);
         Optional<String> accessToken = Optional.ofNullable(extractToken(request.getCookies(), TokenType.ACCESS_TOKEN));
         Optional<String> refreshToken = Optional.ofNullable(extractToken(request.getCookies(), TokenType.REFRESH_TOKEN));
 
@@ -63,7 +60,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         try {
             TokenAuthentication tokenAuthentication = jwtValidator.getAuthentication(accessToken.get(), refreshToken.get());
-            log.info("tokenAuthentication -> tokenStatus: " + tokenAuthentication.tokenStatus());
+//            log.info("tokenAuthentication -> tokenStatus: " + tokenAuthentication.tokenStatus());
 
             if (tokenAuthentication.tokenStatus().equals(TokenStatus.ACCESS_TOKEN_REGENERATION)) {
                 // Access Token 재발급
@@ -127,8 +124,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private boolean isWhiteListed(String requestURI) {
         for (String whiteListURL : securityProperties.getAuthWhitelist()) {
-            if (requestURI.equals(whiteListURL) ||
-                    (requestURI.charAt(requestURI.length() - 1) != '/' && requestURI.equals(whiteListURL + "/"))) {
+            if (requestURI.startsWith(whiteListURL)) {
                 return true;
             }
         }
