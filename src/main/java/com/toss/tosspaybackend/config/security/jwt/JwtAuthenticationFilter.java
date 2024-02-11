@@ -56,6 +56,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // 토큰이 두개 중 한개라도 존재하지 않을 경우 에러
         if (accessToken.isEmpty() || refreshToken.isEmpty()) {
             customAccessDeniedHandler.handle(request, response, new AccessDeniedException("Token is missing."));
+            return;
         }
 
         try {
