@@ -43,6 +43,7 @@ public class Member implements Auditable {
     @Enumerated(EnumType.STRING)
     private List<Role> role = new ArrayList<>(List.of(Role.ROLE_USER));
 
+    @Setter
     @Enumerated(EnumType.STRING)
     private AccountStatus accountStatus;
 

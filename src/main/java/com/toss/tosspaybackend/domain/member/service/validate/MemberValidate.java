@@ -2,6 +2,7 @@ package com.toss.tosspaybackend.domain.member.service.validate;
 
 import com.toss.tosspaybackend.config.security.SecurityProperties;
 import com.toss.tosspaybackend.domain.member.entity.Member;
+import com.toss.tosspaybackend.domain.member.enums.AccountStatus;
 import com.toss.tosspaybackend.domain.member.enums.Gender;
 import com.toss.tosspaybackend.domain.member.repository.MemberRepository;
 import com.toss.tosspaybackend.global.exception.ErrorCode;
@@ -9,6 +10,10 @@ import com.toss.tosspaybackend.global.exception.GlobalException;
 import com.toss.tosspaybackend.util.redis.RedisUtils;
 import jakarta.servlet.http.Cookie;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.encrypt.TextEncryptor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -27,6 +32,7 @@ public class MemberValidate {
     private final RedisUtils redisUtils;
     private final PasswordEncoder passwordEncoder;
     private final SecurityProperties securityProperties;
+    private final TextEncryptor textEncryptor;
 
     public void validatePhoneNumber(String phoneNumber) {
         // 전화번호에 010을 포함하고 있으며
@@ -133,6 +139,9 @@ public class MemberValidate {
         if (!redisUtils.isExists(tokenData)) {
             throw new GlobalException(ErrorCode.UNAUTHORIZED_REQUEST, "만료된 토큰 혹은 유효하지 않은 토큰입니다.");
         } else if (Integer.parseInt(redisUtils.getData(token)) >= 5) {
+            String decryptedPhone = textEncryptor.decrypt(token);
+            accountStatusValidate(decryptedPhone);
+            lockUserAccount(decryptedPhone);
             throw new GlobalException(ErrorCode.UNAUTHORIZED_REQUEST, "로그인 시도 횟수 초과로 인해 계정이 일시적으로 정지되었습니다.");
         }
     }
@@ -158,5 +167,23 @@ public class MemberValidate {
         if (cookies == null || Arrays.stream(cookies).noneMatch(cookie -> securityProperties.getTokenHeader().equals(cookie.getName()))) {
             throw new GlobalException(ErrorCode.BAD_REQUEST, "Bad Request: 요청 형식이 유효하지 않습니다.");
         }
+    }
+
+    public void accountStatusValidate(String phone) {
+        Member member = memberRepository.findByPhone(phone)
+                .orElseThrow(() -> new GlobalException(ErrorCode.INTERNAL_SERVER_ERROR, "계정을 찾을 수 없습니다."));
+        AccountStatus accountStatus = member.getAccountStatus();
+        if (accountStatus.equals(AccountStatus.BANNED)) {
+            throw new AccessDeniedException("계정이 정지되었습니다.");
+        } else if (accountStatus.equals(AccountStatus.SUSPENDED)) {
+            throw new AccessDeniedException("계정이 일시 정지되었습니다.");
+        }
+    }
+
+    private void lockUserAccount(String phone) {
+        Member member = memberRepository.findByPhone(phone)
+                        .orElseThrow(() -> new GlobalException(ErrorCode.INTERNAL_SERVER_ERROR, "계정을 찾을 수 없습니다."));
+        member.setAccountStatus(AccountStatus.SUSPENDED);
+        memberRepository.save(member);
     }
 }

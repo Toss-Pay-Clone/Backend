@@ -63,7 +63,6 @@ public class MemberService {
                 .build();
     }
 
-    @Transactional(readOnly = true)
     public Response<String> login(LoginRequest request, HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
         Cookie[] cookies = httpRequest.getCookies();
         memberValidate.loginCookieExistsValidate(cookies);
@@ -111,7 +110,6 @@ public class MemberService {
                 .build();
     }
 
-    @Transactional(readOnly = true)
     public Response<String> existenceCheck(ExistenceCheckRequest request, HttpServletResponse response) {
 
         boolean isExistsByPhone = memberRepository.existsByPhone(request.phone());
@@ -120,7 +118,7 @@ public class MemberService {
         }
 
         memberValidate.raceConditionAttackCheck(request.phone());
-
+        memberValidate.accountStatusValidate(request.phone());
         String encryptedToken = textEncryptor.encrypt(request.phone());
         Cookie tokenCookie = new Cookie(securityProperties.getTokenHeader(), encryptedToken);
         tokenCookie.setPath("/");
