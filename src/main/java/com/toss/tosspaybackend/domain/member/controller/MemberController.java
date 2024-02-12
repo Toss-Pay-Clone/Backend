@@ -11,23 +11,23 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/auth")
+@RequestMapping("/api/v1")
 @RestController
 public class MemberController {
 
     private final MemberService memberService;
 
-    @PostMapping("/register")
+    @PostMapping("/auth/register")
     public Response<RegisterResponse> register(@Valid @RequestBody RegisterRequest request) {
         return memberService.register(request);
     }
 
-    @PostMapping
+    @PostMapping("/auth")
     public Response<String> login(@Valid @RequestBody LoginRequest request, HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
         return memberService.login(request, httpRequest, httpResponse);
     }
 
-    @PostMapping("/existence-check")
+    @PostMapping("/auth/existence-check")
     public Response<String> existenceCheck(@Valid @RequestBody ExistenceCheckRequest request, HttpServletResponse response) {
         return memberService.existenceCheck(request, response);
     }
