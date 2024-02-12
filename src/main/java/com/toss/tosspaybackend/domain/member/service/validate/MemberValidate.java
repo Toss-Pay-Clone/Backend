@@ -11,8 +11,6 @@ import com.toss.tosspaybackend.util.redis.RedisUtils;
 import jakarta.servlet.http.Cookie;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -127,9 +125,9 @@ public class MemberValidate {
         }
     }
 
-    public void checkPassword(String token, String password, String encryptedPassword) {
+    public void checkPassword(String key, String password, String encryptedPassword) {
         if (!passwordEncoder.matches(password, encryptedPassword)) {
-            int updatedLoginCount = updateLoginCount(token);
+            int updatedLoginCount = updateCertCount(key);
             throw new GlobalException(ErrorCode.UNAUTHORIZED_REQUEST, "비밀번호가 일치하지 않습니다. 현재 시도 횟수: " + updatedLoginCount + "/5 회");
         }
     }
@@ -146,13 +144,13 @@ public class MemberValidate {
         }
     }
 
-    public int updateLoginCount(String token) {
-        String tokenCount = redisUtils.getData(token);
-        if (redisUtils.isExists(tokenCount)) {
-            validateEncryptToken(token);
+    public int updateCertCount(String key) {
+        String certCount = redisUtils.getData(key);
+        if (redisUtils.isExists(certCount)) {
+            validateEncryptToken(key);
         }
-        int count = Integer.parseInt(tokenCount) + 1;
-        redisUtils.setData(token, String.valueOf(count), securityProperties.getPreLoginValidationMillisecond());
+        int count = Integer.parseInt(certCount) + 1;
+        redisUtils.setData(key, String.valueOf(count), securityProperties.getPasswordCertificationMillisecond());
         return count;
     }
 
