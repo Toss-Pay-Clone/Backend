@@ -5,6 +5,7 @@ import com.toss.tosspaybackend.config.security.jwt.JwtProvider;
 import com.toss.tosspaybackend.config.security.jwt.JwtToken;
 import com.toss.tosspaybackend.domain.member.dto.*;
 import com.toss.tosspaybackend.domain.member.entity.Member;
+import com.toss.tosspaybackend.domain.member.enums.AccountStatus;
 import com.toss.tosspaybackend.domain.member.repository.MemberRepository;
 import com.toss.tosspaybackend.domain.member.service.validate.MemberValidate;
 import com.toss.tosspaybackend.global.Response;
@@ -12,6 +13,8 @@ import com.toss.tosspaybackend.global.exception.ErrorCode;
 import com.toss.tosspaybackend.util.redis.RedisUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import com.toss.tosspaybackend.global.exception.GlobalException;
@@ -134,6 +137,36 @@ public class MemberService {
                 .message("전화번호 확인이 완료되었습니다.")
                 .data("비밀번호 인증을 진행해주세요.")
                 .build();
+    }
+
+    public Response<String> passwordCheck(PasswordCheckRequest request) {
+        SecurityContext context = SecurityContextHolder.getContext();
+        Member member = (Member) context.getAuthentication().getPrincipal();
+
+        if (passwordEncoder.matches(request.password(), member.getPassword())) {
+            return Response.<String>builder()
+                    .httpStatus(HttpStatus.OK.value())
+                    .message("비밀번호 인증에 성공하였습니다.")
+                    .data("다음 단계를 진행해주세요.")
+                    .build();
+        }
+
+        String redisCountDataKey = member.getPhone() + securityProperties.getPasswordCertificationSuffix();
+        String certCount = redisUtils.getData(redisCountDataKey);
+        if (!redisUtils.isExists(certCount)) {
+            redisUtils.setData(redisCountDataKey, "1", securityProperties.getPasswordCertificationMillisecond());
+            throw new GlobalException(ErrorCode.UNAUTHORIZED_REQUEST, "비밀번호가 일치하지 않습니다. 현재 시도 횟수: 1/5 회");
+        } else {
+            int count = Integer.parseInt(certCount);
+            if (count >= 5) {
+                member.setAccountStatus(AccountStatus.SUSPENDED);
+                memberRepository.save(member);
+                throw new GlobalException(ErrorCode.UNAUTHORIZED_REQUEST, "로그인 시도 횟수 초과로 인해 계정이 일시적으로 정지되었습니다.");
+            }
+            String tryCount = String.valueOf(count + 1);
+            redisUtils.setData(redisCountDataKey, tryCount, securityProperties.getPasswordCertificationMillisecond());
+            throw new GlobalException(ErrorCode.UNAUTHORIZED_REQUEST, "비밀번호가 일치하지 않습니다. 현재 시도 횟수: " + tryCount + "/5 회");
+        }
     }
 
     private void createLoginCookie(JwtToken jwtToken, HttpServletResponse response) {
