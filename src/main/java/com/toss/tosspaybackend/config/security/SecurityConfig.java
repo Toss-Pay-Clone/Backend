@@ -39,7 +39,7 @@ public class SecurityConfig {
                         exception -> exception.accessDeniedHandler(customAccessDeniedHandler))
                 .sessionManagement(setSessionManagementConfig())
                 .addFilterBefore(jwtAuthenticationFilter, BasicAuthenticationFilter.class)
-                .addFilterAfter(accountStatusFilter, JwtAuthenticationFilter.class)
+                .addFilterAfter(accountStatusFilter, BasicAuthenticationFilter.class)
                 .authorizeHttpRequests(request ->
                         request.requestMatchers(securityProperties.getAuthWhitelist()).permitAll()
                                 .anyRequest().authenticated())
