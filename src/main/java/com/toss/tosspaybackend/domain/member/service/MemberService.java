@@ -83,7 +83,6 @@ public class MemberService {
         // 시도 횟수가 5회 이상일 경우 계정 임시 차단 (여기서는 Manual로 진행함)(전역 Security Filter 등록 예정)
         // tokenCount가 0인 경우 이후 Logic을 좀더 빠르게 수행하기 위해 password Caching
         if (tokenCount.equals("0")) {
-            String decryptedPhone = textEncryptor.decrypt(encryptToken);
             Member member = memberRepository.findByPhone(decryptedPhone)
                     .orElseThrow(() -> new GlobalException(ErrorCode.INTERNAL_SERVER_ERROR, "해당 전화번호로 가입된 계정이 없습니다."));
 
