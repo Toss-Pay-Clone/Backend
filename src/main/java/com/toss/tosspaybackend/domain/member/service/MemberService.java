@@ -102,6 +102,7 @@ public class MemberService {
             memberValidate.checkPassword(encryptToken, request.password(), cachedPassword);
         }
 
+        // 첫 로그인 시도
         Member member = memberRepository.findByPhone(textEncryptor.decrypt(encryptToken)).get();
         JwtToken jwtToken = jwtProvider.createJWTTokens(member);
 
@@ -123,8 +124,10 @@ public class MemberService {
             throw new GlobalException(ErrorCode.NOT_FOUND, "해당 전화번호로 가입된 계정이 없습니다.");
         }
 
-        memberValidate.raceConditionAttackCheck(request.phone());
         memberValidate.accountStatusValidate(request.phone());
+        memberValidate.raceConditionAttackCheck(request.phone());
+
+//        memberValidate.accountStatusValidate(request.phone());
         String encryptedToken = textEncryptor.encrypt(request.phone());
         Cookie tokenCookie = new Cookie(securityProperties.getTokenHeader(), encryptedToken);
         tokenCookie.setPath("/");
