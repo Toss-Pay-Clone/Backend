@@ -5,6 +5,7 @@ import com.toss.tosspaybackend.config.security.jwt.JwtProvider;
 import com.toss.tosspaybackend.config.security.jwt.JwtToken;
 import com.toss.tosspaybackend.domain.member.dto.*;
 import com.toss.tosspaybackend.domain.member.entity.Member;
+import com.toss.tosspaybackend.domain.member.enums.AccountStatus;
 import com.toss.tosspaybackend.domain.member.repository.MemberRepository;
 import com.toss.tosspaybackend.domain.member.service.validate.MemberValidate;
 import com.toss.tosspaybackend.global.Response;
@@ -12,6 +13,8 @@ import com.toss.tosspaybackend.global.exception.ErrorCode;
 import com.toss.tosspaybackend.util.redis.RedisUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import com.toss.tosspaybackend.global.exception.GlobalException;
@@ -72,12 +75,13 @@ public class MemberService {
                 .findFirst().get()
                 .getValue();
 
+        String decryptedPhone = textEncryptor.decrypt(encryptToken);
+        // 계정 정지 확인
+        memberValidate.accountStatusValidate(decryptedPhone);
+
         String tokenCount = redisUtils.getData(encryptToken);
-        // 시도 횟수가 5회 이상일 경우 계정 임시 차단 (여기서는 Manual로 진행함)(전역 Security Filter 등록 예정)
-        memberValidate.validateEncryptToken(encryptToken);
         // tokenCount가 0인 경우 이후 Logic을 좀더 빠르게 수행하기 위해 password Caching
         if (tokenCount.equals("0")) {
-            String decryptedPhone = textEncryptor.decrypt(encryptToken);
             Member member = memberRepository.findByPhone(decryptedPhone)
                     .orElseThrow(() -> new GlobalException(ErrorCode.INTERNAL_SERVER_ERROR, "해당 전화번호로 가입된 계정이 없습니다."));
 
@@ -90,12 +94,14 @@ public class MemberService {
             }
         }
 
-        if (Integer.parseInt(tokenCount) >= 1) {
+        // Login 시도 1회 이상
+        if (!tokenCount.equals("false") && Integer.parseInt(tokenCount) >= 1) {
             // Caching된 Password를 이용하여 검증
             String cachedPassword = redisUtils.getData(encryptToken + securityProperties.getPreLoginPasswordSuffix());
             memberValidate.checkPassword(encryptToken, request.password(), cachedPassword);
         }
 
+        // 첫 로그인 시도
         Member member = memberRepository.findByPhone(textEncryptor.decrypt(encryptToken)).get();
         JwtToken jwtToken = jwtProvider.createJWTTokens(member);
 
@@ -117,8 +123,9 @@ public class MemberService {
             throw new GlobalException(ErrorCode.NOT_FOUND, "해당 전화번호로 가입된 계정이 없습니다.");
         }
 
-        memberValidate.raceConditionAttackCheck(request.phone());
         memberValidate.accountStatusValidate(request.phone());
+        memberValidate.raceConditionAttackCheck(request.phone());
+
         String encryptedToken = textEncryptor.encrypt(request.phone());
         Cookie tokenCookie = new Cookie(securityProperties.getTokenHeader(), encryptedToken);
         tokenCookie.setPath("/");
@@ -133,6 +140,30 @@ public class MemberService {
                 .httpStatus(HttpStatus.CREATED.value())
                 .message("전화번호 확인이 완료되었습니다.")
                 .data("비밀번호 인증을 진행해주세요.")
+                .build();
+    }
+
+    public Response<String> passwordCheck(PasswordCheckRequest request) {
+        SecurityContext context = SecurityContextHolder.getContext();
+        Member member = (Member) context.getAuthentication().getPrincipal();
+        String encryptPhoneRedisKey = member.getPhone() + securityProperties.getPasswordCertificationSuffix();
+
+        String encryptPhone = redisUtils.getData(encryptPhoneRedisKey);
+        if (!redisUtils.isExists(encryptPhone)) {
+            // 첫 인증
+            String encryptedPhone = textEncryptor.encrypt(member.getPhone());
+            redisUtils.setData(encryptPhoneRedisKey, encryptedPhone, securityProperties.getPasswordCertificationMillisecond());
+            redisUtils.setData(encryptedPhone, "0", securityProperties.getPasswordCertificationMillisecond());
+        }
+        encryptPhone = redisUtils.getData(encryptPhoneRedisKey);
+        memberValidate.checkPassword(encryptPhone, request.password(), member.getPassword());
+
+        redisUtils.deleteData(encryptPhoneRedisKey);
+        redisUtils.deleteData(encryptPhone);
+        return Response.<String>builder()
+                .httpStatus(HttpStatus.OK.value())
+                .message("비밀번호 인증에 성공하였습니다.")
+                .data("다음 단계를 진행해주세요.")
                 .build();
     }
 

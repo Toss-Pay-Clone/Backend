@@ -25,4 +25,6 @@ public class SecurityProperties {
     private int encryptTokenValidationSecond;
     private long preLoginValidationMillisecond;
     private String preLoginPasswordSuffix;
+    private String passwordCertificationSuffix;
+    private long passwordCertificationMillisecond;
 }

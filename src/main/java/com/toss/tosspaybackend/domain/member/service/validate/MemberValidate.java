@@ -11,8 +11,6 @@ import com.toss.tosspaybackend.util.redis.RedisUtils;
 import jakarta.servlet.http.Cookie;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -127,32 +125,28 @@ public class MemberValidate {
         }
     }
 
-    public void checkPassword(String token, String password, String encryptedPassword) {
+    public void checkPassword(String key, String password, String encryptedPassword) {
         if (!passwordEncoder.matches(password, encryptedPassword)) {
-            int updatedLoginCount = updateLoginCount(token);
-            throw new GlobalException(ErrorCode.UNAUTHORIZED_REQUEST, "비밀번호가 일치하지 않습니다. 현재 시도 횟수: " + updatedLoginCount + "/5 회");
+            int updatedCertCount = updateCertCount(key);
+            throw new GlobalException(ErrorCode.UNAUTHORIZED_REQUEST, "비밀번호가 일치하지 않습니다. 현재 시도 횟수: " + updatedCertCount + "/5 회");
         }
     }
 
-    public void validateEncryptToken(String token) {
-        String tokenData = redisUtils.getData(token);
-        if (!redisUtils.isExists(tokenData)) {
-            throw new GlobalException(ErrorCode.UNAUTHORIZED_REQUEST, "만료된 토큰 혹은 유효하지 않은 토큰입니다.");
-        } else if (Integer.parseInt(redisUtils.getData(token)) >= 5) {
-            String decryptedPhone = textEncryptor.decrypt(token);
-            accountStatusValidate(decryptedPhone);
+    public int updateCertCount(String key) {
+        String certCount = redisUtils.getData(key);
+
+        if (!redisUtils.isExists(certCount)) {
+            throw new GlobalException(ErrorCode.INTERNAL_SERVER_ERROR, ErrorCode.INTERNAL_SERVER_ERROR.getMessage());
+        }
+
+        int count = Integer.parseInt(certCount) + 1;
+        if (count >= 5) {
+            String decryptedPhone = textEncryptor.decrypt(key);
             lockUserAccount(decryptedPhone);
             throw new GlobalException(ErrorCode.UNAUTHORIZED_REQUEST, "로그인 시도 횟수 초과로 인해 계정이 일시적으로 정지되었습니다.");
         }
-    }
 
-    public int updateLoginCount(String token) {
-        String tokenCount = redisUtils.getData(token);
-        if (redisUtils.isExists(tokenCount)) {
-            validateEncryptToken(token);
-        }
-        int count = Integer.parseInt(tokenCount) + 1;
-        redisUtils.setData(token, String.valueOf(count), securityProperties.getPreLoginValidationMillisecond());
+        redisUtils.setData(key, String.valueOf(count), securityProperties.getPasswordCertificationMillisecond());
         return count;
     }
 
@@ -174,9 +168,9 @@ public class MemberValidate {
                 .orElseThrow(() -> new GlobalException(ErrorCode.INTERNAL_SERVER_ERROR, "계정을 찾을 수 없습니다."));
         AccountStatus accountStatus = member.getAccountStatus();
         if (accountStatus.equals(AccountStatus.BANNED)) {
-            throw new AccessDeniedException("계정이 정지되었습니다.");
+            throw new GlobalException(ErrorCode.LOCKED, "계정이 정지되었습니다.");
         } else if (accountStatus.equals(AccountStatus.SUSPENDED)) {
-            throw new AccessDeniedException("계정이 일시 정지되었습니다.");
+            throw new GlobalException(ErrorCode.LOCKED, "계정이 일시 정지되었습니다.");
         }
     }
 
