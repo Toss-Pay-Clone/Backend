@@ -132,13 +132,13 @@ public class MemberValidate {
         }
     }
 
-    public void validateEncryptToken(String token) {
-        String tokenData = redisUtils.getData(token);
-        if (!redisUtils.isExists(tokenData)) {
+    public void validateCertCount(String key) {
+        String certCount = redisUtils.getData(key);
+        if (!redisUtils.isExists(certCount)) {
             throw new GlobalException(ErrorCode.UNAUTHORIZED_REQUEST, "만료된 토큰 혹은 유효하지 않은 토큰입니다.");
-        } else if (Integer.parseInt(redisUtils.getData(token)) >= 5) {
-            String decryptedPhone = textEncryptor.decrypt(token);
-            accountStatusValidate(decryptedPhone);
+        } else if (Integer.parseInt(redisUtils.getData(key)) >= 5) {
+            String decryptedPhone = textEncryptor.decrypt(key);
+//            accountStatusValidate(decryptedPhone);
             lockUserAccount(decryptedPhone);
             throw new GlobalException(ErrorCode.UNAUTHORIZED_REQUEST, "로그인 시도 횟수 초과로 인해 계정이 일시적으로 정지되었습니다.");
         }
