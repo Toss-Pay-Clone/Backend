@@ -95,7 +95,8 @@ public class MemberService {
             }
         }
 
-        if (Integer.parseInt(tokenCount) >= 1) {
+        // Login 시도 1회 이상
+        if (!tokenCount.equals("false") && Integer.parseInt(tokenCount) >= 1) {
             // Caching된 Password를 이용하여 검증
             String cachedPassword = redisUtils.getData(encryptToken + securityProperties.getPreLoginPasswordSuffix());
             memberValidate.checkPassword(encryptToken, request.password(), cachedPassword);
