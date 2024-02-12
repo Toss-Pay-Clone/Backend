@@ -80,7 +80,6 @@ public class MemberService {
         memberValidate.accountStatusValidate(decryptedPhone);
 
         String tokenCount = redisUtils.getData(encryptToken);
-        // 시도 횟수가 5회 이상일 경우 계정 임시 차단 (여기서는 Manual로 진행함)(전역 Security Filter 등록 예정)
         // tokenCount가 0인 경우 이후 Logic을 좀더 빠르게 수행하기 위해 password Caching
         if (tokenCount.equals("0")) {
             Member member = memberRepository.findByPhone(decryptedPhone)
@@ -127,7 +126,6 @@ public class MemberService {
         memberValidate.accountStatusValidate(request.phone());
         memberValidate.raceConditionAttackCheck(request.phone());
 
-//        memberValidate.accountStatusValidate(request.phone());
         String encryptedToken = textEncryptor.encrypt(request.phone());
         Cookie tokenCookie = new Cookie(securityProperties.getTokenHeader(), encryptedToken);
         tokenCookie.setPath("/");
@@ -148,33 +146,25 @@ public class MemberService {
     public Response<String> passwordCheck(PasswordCheckRequest request) {
         SecurityContext context = SecurityContextHolder.getContext();
         Member member = (Member) context.getAuthentication().getPrincipal();
-        String redisCountDataKey = member.getPhone() + securityProperties.getPasswordCertificationSuffix();
+        String encryptPhoneRedisKey = member.getPhone() + securityProperties.getPasswordCertificationSuffix();
 
-        if (passwordEncoder.matches(request.password(), member.getPassword())) {
-            redisUtils.deleteData(redisCountDataKey);
-            return Response.<String>builder()
-                    .httpStatus(HttpStatus.OK.value())
-                    .message("비밀번호 인증에 성공하였습니다.")
-                    .data("다음 단계를 진행해주세요.")
-                    .build();
+        String encryptPhone = redisUtils.getData(encryptPhoneRedisKey);
+        if (!redisUtils.isExists(encryptPhone)) {
+            // 첫 인증
+            String encryptedPhone = textEncryptor.encrypt(member.getPhone());
+            redisUtils.setData(encryptPhoneRedisKey, encryptedPhone, securityProperties.getPasswordCertificationMillisecond());
+            redisUtils.setData(encryptedPhone, "0", securityProperties.getPasswordCertificationMillisecond());
         }
+        encryptPhone = redisUtils.getData(encryptPhoneRedisKey);
+        memberValidate.checkPassword(encryptPhone, request.password(), member.getPassword());
 
-        String certCount = redisUtils.getData(redisCountDataKey);
-        if (!redisUtils.isExists(certCount)) {
-            redisUtils.setData(redisCountDataKey, "1", securityProperties.getPasswordCertificationMillisecond());
-            throw new GlobalException(ErrorCode.UNAUTHORIZED_REQUEST, "비밀번호가 일치하지 않습니다. 현재 시도 횟수: 1/5 회");
-        } else {
-            int count = Integer.parseInt(certCount);
-            int tryCount = count + 1;
-            if (tryCount >= 5) {
-                redisUtils.deleteData(redisCountDataKey);
-                member.setAccountStatus(AccountStatus.SUSPENDED);
-                memberRepository.save(member);
-                throw new GlobalException(ErrorCode.UNAUTHORIZED_REQUEST, "로그인 시도 횟수 초과로 인해 계정이 일시적으로 정지되었습니다.");
-            }
-            redisUtils.setData(redisCountDataKey, String.valueOf(tryCount), securityProperties.getPasswordCertificationMillisecond());
-            throw new GlobalException(ErrorCode.UNAUTHORIZED_REQUEST, "비밀번호가 일치하지 않습니다. 현재 시도 횟수: " + tryCount + "/5 회");
-        }
+        redisUtils.deleteData(encryptPhoneRedisKey);
+        redisUtils.deleteData(encryptPhone);
+        return Response.<String>builder()
+                .httpStatus(HttpStatus.OK.value())
+                .message("비밀번호 인증에 성공하였습니다.")
+                .data("다음 단계를 진행해주세요.")
+                .build();
     }
 
     private void createLoginCookie(JwtToken jwtToken, HttpServletResponse response) {
