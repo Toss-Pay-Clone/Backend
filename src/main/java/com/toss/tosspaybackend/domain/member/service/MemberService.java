@@ -75,9 +75,12 @@ public class MemberService {
                 .findFirst().get()
                 .getValue();
 
+        String decryptedPhone = textEncryptor.decrypt(encryptToken);
+        // 계정 정지 확인
+        memberValidate.accountStatusValidate(decryptedPhone);
+
         String tokenCount = redisUtils.getData(encryptToken);
         // 시도 횟수가 5회 이상일 경우 계정 임시 차단 (여기서는 Manual로 진행함)(전역 Security Filter 등록 예정)
-        memberValidate.validateEncryptToken(encryptToken);
         // tokenCount가 0인 경우 이후 Logic을 좀더 빠르게 수행하기 위해 password Caching
         if (tokenCount.equals("0")) {
             String decryptedPhone = textEncryptor.decrypt(encryptToken);
