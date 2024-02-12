@@ -172,9 +172,9 @@ public class MemberValidate {
                 .orElseThrow(() -> new GlobalException(ErrorCode.INTERNAL_SERVER_ERROR, "계정을 찾을 수 없습니다."));
         AccountStatus accountStatus = member.getAccountStatus();
         if (accountStatus.equals(AccountStatus.BANNED)) {
-            throw new AccessDeniedException("계정이 정지되었습니다.");
+            throw new GlobalException(ErrorCode.LOCKED, "계정이 정지되었습니다.");
         } else if (accountStatus.equals(AccountStatus.SUSPENDED)) {
-            throw new AccessDeniedException("계정이 일시 정지되었습니다.");
+            throw new GlobalException(ErrorCode.LOCKED, "계정이 일시 정지되었습니다.");
         }
     }
 
