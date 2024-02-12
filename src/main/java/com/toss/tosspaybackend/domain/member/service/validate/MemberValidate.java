@@ -127,29 +127,25 @@ public class MemberValidate {
 
     public void checkPassword(String key, String password, String encryptedPassword) {
         if (!passwordEncoder.matches(password, encryptedPassword)) {
-            int updatedLoginCount = updateCertCount(key);
-            throw new GlobalException(ErrorCode.UNAUTHORIZED_REQUEST, "비밀번호가 일치하지 않습니다. 현재 시도 횟수: " + updatedLoginCount + "/5 회");
-        }
-    }
-
-    public void validateCertCount(String key) {
-        String certCount = redisUtils.getData(key);
-        if (!redisUtils.isExists(certCount)) {
-            throw new GlobalException(ErrorCode.UNAUTHORIZED_REQUEST, "만료된 토큰 혹은 유효하지 않은 토큰입니다.");
-        } else if (Integer.parseInt(redisUtils.getData(key)) >= 5) {
-            String decryptedPhone = textEncryptor.decrypt(key);
-//            accountStatusValidate(decryptedPhone);
-            lockUserAccount(decryptedPhone);
-            throw new GlobalException(ErrorCode.UNAUTHORIZED_REQUEST, "로그인 시도 횟수 초과로 인해 계정이 일시적으로 정지되었습니다.");
+            int updatedCertCount = updateCertCount(key);
+            throw new GlobalException(ErrorCode.UNAUTHORIZED_REQUEST, "비밀번호가 일치하지 않습니다. 현재 시도 횟수: " + updatedCertCount + "/5 회");
         }
     }
 
     public int updateCertCount(String key) {
         String certCount = redisUtils.getData(key);
-        if (redisUtils.isExists(certCount)) {
-            validateEncryptToken(key);
+
+        if (!redisUtils.isExists(certCount)) {
+            throw new GlobalException(ErrorCode.INTERNAL_SERVER_ERROR, ErrorCode.INTERNAL_SERVER_ERROR.getMessage());
         }
+
         int count = Integer.parseInt(certCount) + 1;
+        if (count >= 5) {
+            String decryptedPhone = textEncryptor.decrypt(key);
+            lockUserAccount(decryptedPhone);
+            throw new GlobalException(ErrorCode.UNAUTHORIZED_REQUEST, "로그인 시도 횟수 초과로 인해 계정이 일시적으로 정지되었습니다.");
+        }
+
         redisUtils.setData(key, String.valueOf(count), securityProperties.getPasswordCertificationMillisecond());
         return count;
     }
