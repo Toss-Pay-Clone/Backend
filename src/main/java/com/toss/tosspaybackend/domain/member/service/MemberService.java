@@ -142,8 +142,10 @@ public class MemberService {
     public Response<String> passwordCheck(PasswordCheckRequest request) {
         SecurityContext context = SecurityContextHolder.getContext();
         Member member = (Member) context.getAuthentication().getPrincipal();
+        String redisCountDataKey = member.getPhone() + securityProperties.getPasswordCertificationSuffix();
 
         if (passwordEncoder.matches(request.password(), member.getPassword())) {
+            redisUtils.deleteData(redisCountDataKey);
             return Response.<String>builder()
                     .httpStatus(HttpStatus.OK.value())
                     .message("비밀번호 인증에 성공하였습니다.")
@@ -151,20 +153,20 @@ public class MemberService {
                     .build();
         }
 
-        String redisCountDataKey = member.getPhone() + securityProperties.getPasswordCertificationSuffix();
         String certCount = redisUtils.getData(redisCountDataKey);
         if (!redisUtils.isExists(certCount)) {
             redisUtils.setData(redisCountDataKey, "1", securityProperties.getPasswordCertificationMillisecond());
             throw new GlobalException(ErrorCode.UNAUTHORIZED_REQUEST, "비밀번호가 일치하지 않습니다. 현재 시도 횟수: 1/5 회");
         } else {
             int count = Integer.parseInt(certCount);
-            if (count >= 5) {
+            int tryCount = count + 1;
+            if (tryCount >= 5) {
+                redisUtils.deleteData(redisCountDataKey);
                 member.setAccountStatus(AccountStatus.SUSPENDED);
                 memberRepository.save(member);
                 throw new GlobalException(ErrorCode.UNAUTHORIZED_REQUEST, "로그인 시도 횟수 초과로 인해 계정이 일시적으로 정지되었습니다.");
             }
-            String tryCount = String.valueOf(count + 1);
-            redisUtils.setData(redisCountDataKey, tryCount, securityProperties.getPasswordCertificationMillisecond());
+            redisUtils.setData(redisCountDataKey, String.valueOf(tryCount), securityProperties.getPasswordCertificationMillisecond());
             throw new GlobalException(ErrorCode.UNAUTHORIZED_REQUEST, "비밀번호가 일치하지 않습니다. 현재 시도 횟수: " + tryCount + "/5 회");
         }
     }
