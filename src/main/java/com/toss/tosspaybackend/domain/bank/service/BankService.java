@@ -20,6 +20,28 @@ import java.util.Random;
 public class BankService {
     private final BankAccountRepository bankAccountRepository;
 
+    public Response<AddBankAccountResponse> addBankAccount(AddBankAccountRequest request) {
+        SecurityContext context = SecurityContextHolder.getContext();
+        Long bankAccountNumber = createBankAccountNumber();
+        Member member = (Member) context.getAuthentication().getPrincipal();
+        BankAccount bankAccount = BankAccount.builder()
+                .bankAccountNumber(bankAccountNumber)
+                .name("입출금 계좌")
+                // 입금 기능 구현 후 초기 금액 입금 예정
+                .balance(0L)
+                .bank(request.bank())
+                .member(member)
+                // Password 설정은 회의 후 진행
+                .password("1234")
+                .build();
+        BankAccount savedBankAccount = bankAccountRepository.save(bankAccount);
+        return Response.<AddBankAccountResponse>builder()
+                .httpStatus(HttpStatus.OK.value())
+                .message("계좌가 성공적으로 연결되었습니다.")
+                .data(AddBankAccountResponse.of(savedBankAccount))
+                .build();
+    }
+
     private Long createBankAccountNumber() {
         Optional<BankAccount> findBankAccount = Optional.empty();
         Long randomAccountNumber = 0L;
