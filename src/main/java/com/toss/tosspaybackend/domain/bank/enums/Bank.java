@@ -1,9 +1,9 @@
-package com.toss.tosspaybackend.domain.bank;
+package com.toss.tosspaybackend.domain.bank.enums;
 
 import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
-public enum BankName {
+public enum Bank {
     KOOKMIN_BANK("KB국민은행"),
     KAKAO_BANK("카카오뱅크"),
     SHINHAN_BANK("신한은행"),
