@@ -31,4 +31,14 @@ public class BankAccount implements Auditable {
     @Embedded
     @Column(nullable = false)
     private BaseTime baseTime;
+
+    @Builder
+    public BankAccount(Long bankAccountNumber, String name, Long balance, Bank bank, Member member, String password) {
+        this.bankAccountNumber = bankAccountNumber;
+        this.name = name;
+        this.balance = balance;
+        this.bank = bank;
+        this.member = member;
+        this.password = password;
+    }
 }
