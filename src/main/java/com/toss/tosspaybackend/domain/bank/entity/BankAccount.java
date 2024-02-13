@@ -6,10 +6,7 @@ import com.toss.tosspaybackend.global.basetime.AuditListener;
 import com.toss.tosspaybackend.global.basetime.Auditable;
 import com.toss.tosspaybackend.global.basetime.BaseTime;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
