@@ -5,9 +5,10 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 
 public record AddBankAccountRequest(
-        @NotNull Bank bank
+        @NotNull Bank bank,
+        @NotNull Long bankAccountNumber
 ) {
-    public static AddBankAccountRequest of(Bank bank) {
-        return new AddBankAccountRequest(bank);
+    public static AddBankAccountRequest of(Bank bank, Long bankAccountNumber) {
+        return new AddBankAccountRequest(bank, bankAccountNumber);
     }
 }
