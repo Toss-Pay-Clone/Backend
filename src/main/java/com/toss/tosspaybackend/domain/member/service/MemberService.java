@@ -60,7 +60,7 @@ public class MemberService {
                 .build();
 
         return Response.<RegisterResponse>builder()
-                .httpStatus(HttpStatus.CREATED.value())
+                .httpStatus(HttpStatus.CREATED)
                 .message("회원가입에 성공했습니다.")
                 .data(responseData)
                 .build();
@@ -110,7 +110,7 @@ public class MemberService {
         createLoginCookie(jwtToken, httpResponse);
 
         return Response.<String>builder()
-                .httpStatus(HttpStatus.OK.value())
+                .httpStatus(HttpStatus.OK)
                 .message("로그인에 성공했습니다.")
                 .data("시스템에 접속 가능한 상태입니다.")
                 .build();
@@ -137,7 +137,7 @@ public class MemberService {
         redisUtils.setData(encryptedToken, "0", securityProperties.getPreLoginValidationMillisecond());
 
         return Response.<String>builder()
-                .httpStatus(HttpStatus.CREATED.value())
+                .httpStatus(HttpStatus.OK)
                 .message("전화번호 확인이 완료되었습니다.")
                 .data("비밀번호 인증을 진행해주세요.")
                 .build();
@@ -161,7 +161,7 @@ public class MemberService {
         redisUtils.deleteData(encryptPhoneRedisKey);
         redisUtils.deleteData(encryptPhone);
         return Response.<String>builder()
-                .httpStatus(HttpStatus.OK.value())
+                .httpStatus(HttpStatus.OK)
                 .message("비밀번호 인증에 성공하였습니다.")
                 .data("다음 단계를 진행해주세요.")
                 .build();
