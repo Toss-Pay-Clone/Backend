@@ -42,6 +42,12 @@ jobs:
     - name: Build with Gradle Wrapper
       run: ./gradlew build
 
+    - name: Docker build
+      run: |
+        echo ${{ secrets.DOCKER_PWD }} | docker login -u ${{ secrets.DOCKER_ID }} --password-stdin
+        docker build -t ssnowss/toss-server .
+        docker push ssnowss/toss-server
+
     # NOTE: The Gradle Wrapper is the default and recommended way to run Gradle (https://docs.gradle.org/current/userguide/gradle_wrapper.html).
     # If your project does not have the Gradle Wrapper configured, you can use the following configuration to run Gradle with a specified version.
     #
@@ -77,12 +83,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:      
-    - name: Docker build
-      run: |
-        echo ${{ secrets.DOCKER_PWD }} | docker login -u ${{ secrets.DOCKER_ID }} --password-stdin
-        docker build -t ssnowss/toss-server .
-        docker push ssnowss/toss-server
-
     - name: Cloud Server Deploy
       uses: appleboy/ssh-action@master
       with:
