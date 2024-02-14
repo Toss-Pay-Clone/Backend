@@ -7,6 +7,8 @@ import com.toss.tosspaybackend.domain.bank.entity.BankAccount;
 import com.toss.tosspaybackend.domain.bank.repository.BankAccountRepository;
 import com.toss.tosspaybackend.domain.member.entity.Member;
 import com.toss.tosspaybackend.global.Response;
+import com.toss.tosspaybackend.global.exception.ErrorCode;
+import com.toss.tosspaybackend.global.exception.GlobalException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,10 +26,10 @@ public class BankService {
 
     public Response<AddBankAccountResponse> addBankAccount(AddBankAccountRequest request) {
         SecurityContext context = SecurityContextHolder.getContext();
-        Long bankAccountNumber = createBankAccountNumber();
+        validateBankAccountNumber(request.bankAccountNumber());
         Member member = (Member) context.getAuthentication().getPrincipal();
         BankAccount bankAccount = BankAccount.builder()
-                .bankAccountNumber(bankAccountNumber)
+                .bankAccountNumber(request.bankAccountNumber())
                 .name(request.bank().getKorName() + " 계좌")
                 // 입금 기능 구현 후 초기 금액 입금 예정
                 .balance(0L)
@@ -71,5 +73,16 @@ public class BankService {
         } while (findBankAccount.isPresent());
 
         return randomAccountNumber;
+    }
+
+    private void validateBankAccountNumber(Long bankAccountNumber) {
+        if (String.valueOf(bankAccountNumber).length() != 14) {
+            throw new GlobalException(ErrorCode.BAD_REQUEST, "입력된 계좌번호 형식이 유효하지 않습니다.");
+        }
+
+        Optional<BankAccount> findBankAccount = bankAccountRepository.findById(bankAccountNumber);
+        if (findBankAccount.isPresent()) {
+            throw new GlobalException(ErrorCode.CONFLICT, "이미 존재하는 계좌번호입니다.");
+        }
     }
 }
