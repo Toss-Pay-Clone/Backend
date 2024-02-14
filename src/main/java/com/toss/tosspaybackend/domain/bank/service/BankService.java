@@ -8,6 +8,7 @@ import com.toss.tosspaybackend.domain.member.entity.Member;
 import com.toss.tosspaybackend.global.Response;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -26,7 +27,7 @@ public class BankService {
         Member member = (Member) context.getAuthentication().getPrincipal();
         BankAccount bankAccount = BankAccount.builder()
                 .bankAccountNumber(bankAccountNumber)
-                .name("입출금 계좌")
+                .name(request.bank().getKorName() + " 계좌")
                 // 입금 기능 구현 후 초기 금액 입금 예정
                 .balance(0L)
                 .bank(request.bank())
@@ -36,7 +37,7 @@ public class BankService {
                 .build();
         BankAccount savedBankAccount = bankAccountRepository.save(bankAccount);
         return Response.<AddBankAccountResponse>builder()
-                .httpStatus(HttpStatus.OK.value())
+                .httpStatus(HttpStatus.OK)
                 .message("계좌가 성공적으로 연결되었습니다.")
                 .data(AddBankAccountResponse.of(savedBankAccount))
                 .build();
