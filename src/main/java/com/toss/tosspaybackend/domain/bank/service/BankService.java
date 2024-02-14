@@ -2,6 +2,7 @@ package com.toss.tosspaybackend.domain.bank.service;
 
 import com.toss.tosspaybackend.domain.bank.dto.AddBankAccountRequest;
 import com.toss.tosspaybackend.domain.bank.dto.AddBankAccountResponse;
+import com.toss.tosspaybackend.domain.bank.dto.GenerateAccountNumberResponse;
 import com.toss.tosspaybackend.domain.bank.entity.BankAccount;
 import com.toss.tosspaybackend.domain.bank.repository.BankAccountRepository;
 import com.toss.tosspaybackend.domain.member.entity.Member;
@@ -40,6 +41,16 @@ public class BankService {
                 .httpStatus(HttpStatus.OK)
                 .message("계좌가 성공적으로 연결되었습니다.")
                 .data(AddBankAccountResponse.of(savedBankAccount))
+                .build();
+    }
+
+    public Response<GenerateAccountNumberResponse> generateAccountNumber() {
+        Long bankAccountNumber = createBankAccountNumber();
+
+        return Response.<GenerateAccountNumberResponse>builder()
+                .httpStatus(HttpStatus.CREATED)
+                .message("랜덤 계좌번호를 생성했습니다.")
+                .data(new GenerateAccountNumberResponse(bankAccountNumber))
                 .build();
     }
 
