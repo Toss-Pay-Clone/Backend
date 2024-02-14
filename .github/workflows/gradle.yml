@@ -71,3 +71,24 @@ jobs:
     # See: https://github.com/gradle/actions/blob/main/dependency-submission/README.md
     - name: Generate and submit dependency graph
       uses: gradle/actions/dependency-submission@417ae3ccd767c252f5661f1ace9f835f9654f2b5 # v3.1.0
+      
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Docker build
+      run: |
+        docker login -u ${{ secrets.DOCKER_ID }} -p ${{ secrets.DOCKER_PWD }}
+        docker build -t ssnowss/toss-server .
+        docker push ssnowss/toss-server
+
+    - name: Cloud Server Deploy
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        password: ${{ secrets.PASSWORD }}
+        script: |
+          docker pull ssnowss/toss-server
+          docker stop server
+          docker run -d --rm --name server -p 8080:8080 ssnowss/toss-server
