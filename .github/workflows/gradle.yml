@@ -35,6 +35,7 @@ jobs:
 
     - name: Create application.yml from secret
       run: |
+        pwd
         echo "${{ secrets.APPLICATION_YML }}" > src/main/resources/application.yml
       shell: bash
 
