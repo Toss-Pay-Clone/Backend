@@ -7,6 +7,7 @@ import com.toss.tosspaybackend.domain.bank.dto.GenerateAccountNumberResponse;
 import com.toss.tosspaybackend.domain.bank.entity.BankAccount;
 import com.toss.tosspaybackend.domain.bank.repository.BankAccountRepository;
 import com.toss.tosspaybackend.domain.member.entity.Member;
+import com.toss.tosspaybackend.domain.member.repository.MemberRepository;
 import com.toss.tosspaybackend.global.Response;
 import com.toss.tosspaybackend.global.exception.ErrorCode;
 import com.toss.tosspaybackend.global.exception.GlobalException;
@@ -25,6 +26,7 @@ import java.util.Random;
 @Service
 public class BankService {
     private final BankAccountRepository bankAccountRepository;
+    private final MemberRepository memberRepository;
 
     public Response<AddBankAccountResponse> addBankAccount(AddBankAccountRequest request) {
         SecurityContext context = SecurityContextHolder.getContext();
@@ -99,6 +101,19 @@ public class BankService {
                 .httpStatus(HttpStatus.OK)
                 .message("계좌 목록을 성공적으로 조회하였습니다.")
                 .data(bankAccountDtoList)
+                .build();
+    }
+
+    public Response<BankAccountListResponse> getBankAccount(Long id) {
+        SecurityContext context = SecurityContextHolder.getContext();
+        Member member = (Member) context.getAuthentication().getPrincipal();
+        BankAccount findBankAccount = bankAccountRepository.findByMemberAndBankAccountNumber(member, id)
+                .orElseThrow(() -> new GlobalException(ErrorCode.NOT_FOUND, "계좌를 찾을 수 없습니다."));
+
+        return Response.<BankAccountListResponse>builder()
+                .httpStatus(HttpStatus.OK)
+                .message("계좌를 성공적으로 조회하였습니다.")
+                .data(BankAccountListResponse.fromEntity(findBankAccount))
                 .build();
     }
 }
