@@ -2,6 +2,7 @@ package com.toss.tosspaybackend.domain.bank.service;
 
 import com.toss.tosspaybackend.domain.bank.dto.AddBankAccountRequest;
 import com.toss.tosspaybackend.domain.bank.dto.AddBankAccountResponse;
+import com.toss.tosspaybackend.domain.bank.dto.BankAccountListResponse;
 import com.toss.tosspaybackend.domain.bank.dto.GenerateAccountNumberResponse;
 import com.toss.tosspaybackend.domain.bank.entity.BankAccount;
 import com.toss.tosspaybackend.domain.bank.repository.BankAccountRepository;
@@ -16,6 +17,7 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 
@@ -84,5 +86,19 @@ public class BankService {
         if (findBankAccount.isPresent()) {
             throw new GlobalException(ErrorCode.CONFLICT, "이미 존재하는 계좌번호입니다.");
         }
+    }
+
+    public Response<List<BankAccountListResponse>> getBankAccountList() {
+        SecurityContext context = SecurityContextHolder.getContext();
+        Member member = (Member) context.getAuthentication().getPrincipal();
+
+        List<BankAccountListResponse> bankAccountDtoList = bankAccountRepository.findAllByMember(member).stream()
+                .map(BankAccountListResponse::fromEntity)
+                .toList();
+        return Response.<List<BankAccountListResponse>>builder()
+                .httpStatus(HttpStatus.OK)
+                .message("계좌 목록을 성공적으로 조회하였습니다.")
+                .data(bankAccountDtoList)
+                .build();
     }
 }
