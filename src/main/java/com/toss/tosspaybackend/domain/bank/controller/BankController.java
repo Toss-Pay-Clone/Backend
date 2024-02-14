@@ -40,4 +40,11 @@ public class BankController {
     public Response<List<BankAccountListResponse>> bankAccountList() {
         return bankService.getBankAccountList();
     }
+
+    @PreAuthorize("hasAuthority(@roleService.getRoleUser())")
+    @ResponseStatus(HttpStatus.OK)
+    @GetMapping("/account/{id}")
+    public Response<BankAccountListResponse> bankAccount(@PathVariable("id") Long id) {
+        return bankService.getBankAccount(id);
+    }
 }
