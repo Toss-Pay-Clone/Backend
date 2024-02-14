@@ -72,4 +72,15 @@ public class BankService {
 
         return randomAccountNumber;
     }
+
+    private void validateBankAccountNumber(Long bankAccountNumber) {
+        if (String.valueOf(bankAccountNumber).length() != 14) {
+            throw new GlobalException(ErrorCode.BAD_REQUEST, "입력된 계좌번호 형식이 유효하지 않습니다.");
+        }
+
+        Optional<BankAccount> findBankAccount = bankAccountRepository.findById(bankAccountNumber);
+        if (findBankAccount.isPresent()) {
+            throw new GlobalException(ErrorCode.CONFLICT, "이미 존재하는 계좌번호입니다.");
+        }
+    }
 }
