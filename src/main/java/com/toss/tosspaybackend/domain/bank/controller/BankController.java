@@ -2,6 +2,7 @@ package com.toss.tosspaybackend.domain.bank.controller;
 
 import com.toss.tosspaybackend.domain.bank.dto.AddBankAccountRequest;
 import com.toss.tosspaybackend.domain.bank.dto.AddBankAccountResponse;
+import com.toss.tosspaybackend.domain.bank.dto.BankAccountListResponse;
 import com.toss.tosspaybackend.domain.bank.dto.GenerateAccountNumberResponse;
 import com.toss.tosspaybackend.domain.bank.service.BankService;
 import com.toss.tosspaybackend.global.Response;
@@ -10,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/bank")
@@ -29,5 +32,12 @@ public class BankController {
     @PostMapping("/account/gen-number")
     public Response<GenerateAccountNumberResponse> generateAccountNumber() {
         return bankService.generateAccountNumber();
+    }
+
+    @PreAuthorize("hasAuthority(@roleService.getRoleUser())")
+    @ResponseStatus(HttpStatus.OK)
+    @GetMapping("/account")
+    public Response<List<BankAccountListResponse>> bankAccountList() {
+        return bankService.getBankAccountList();
     }
 }
