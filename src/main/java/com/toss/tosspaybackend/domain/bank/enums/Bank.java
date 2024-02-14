@@ -1,7 +1,9 @@
 package com.toss.tosspaybackend.domain.bank.enums;
 
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 
+@Getter
 @AllArgsConstructor
 public enum Bank {
     KOOKMIN_BANK("KB국민은행"),
