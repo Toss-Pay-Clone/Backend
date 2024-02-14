@@ -35,8 +35,8 @@ jobs:
 
     - name: Create application.yml from secret
       run: |
-        ls
-        echo "${{ secrets.APPLICATION_YML }}" > ./src/main/resources/application.yml
+        ls src/main/resources
+        echo "${{ secrets.APPLICATION_YML }}" > src/main/resources/application.yml
       shell: bash
 
     - name: Build with Gradle Wrapper
