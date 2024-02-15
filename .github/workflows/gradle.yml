@@ -90,4 +90,5 @@ jobs:
         script: |
           docker pull ssnowss/toss-server
           docker stop server
+          sleep 5
           docker run -d --rm --name server -p 8080:8080 ssnowss/toss-server
