@@ -1,11 +1,11 @@
 package com.toss.tosspaybackend.domain.bank.service;
 
-import com.toss.tosspaybackend.domain.bank.dto.AddBankAccountRequest;
-import com.toss.tosspaybackend.domain.bank.dto.AddBankAccountResponse;
-import com.toss.tosspaybackend.domain.bank.dto.BankAccountListResponse;
-import com.toss.tosspaybackend.domain.bank.dto.GenerateAccountNumberResponse;
+import com.toss.tosspaybackend.domain.bank.dto.*;
 import com.toss.tosspaybackend.domain.bank.entity.BankAccount;
+import com.toss.tosspaybackend.domain.bank.entity.BankAccountTransactionHistory;
+import com.toss.tosspaybackend.domain.bank.enums.TransactionType;
 import com.toss.tosspaybackend.domain.bank.repository.BankAccountRepository;
+import com.toss.tosspaybackend.domain.bank.repository.BankAccountTransactionHistoryRepository;
 import com.toss.tosspaybackend.domain.member.entity.Member;
 import com.toss.tosspaybackend.domain.member.repository.MemberRepository;
 import com.toss.tosspaybackend.global.Response;
@@ -13,20 +13,19 @@ import com.toss.tosspaybackend.global.exception.ErrorCode;
 import com.toss.tosspaybackend.global.exception.GlobalException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.Random;
+import java.time.LocalDateTime;
+import java.util.*;
 
 @RequiredArgsConstructor
 @Service
 public class BankService {
     private final BankAccountRepository bankAccountRepository;
     private final MemberRepository memberRepository;
+    private final BankAccountTransactionHistoryRepository bankAccountTransactionHistoryRepository;
 
     public Response<AddBankAccountResponse> addBankAccount(AddBankAccountRequest request) {
         SecurityContext context = SecurityContextHolder.getContext();
@@ -114,6 +113,23 @@ public class BankService {
                 .httpStatus(HttpStatus.OK)
                 .message("계좌를 성공적으로 조회하였습니다.")
                 .data(BankAccountListResponse.fromEntity(findBankAccount))
+                .build();
+    }
+
+    public Response<List<TransactionHistoryResponse>> getBankAccountTransactionList() {
+        SecurityContext context = SecurityContextHolder.getContext();
+        Member member = (Member) context.getAuthentication().getPrincipal();
+        List<BankAccountTransactionHistory> depositHistoryList = bankAccountTransactionHistoryRepository.findByTransactionTypeAndDepositDestination_Member(TransactionType.DEPOSIT, member);
+        List<BankAccountTransactionHistory> withdrawaHistoryList = bankAccountTransactionHistoryRepository.findByTransactionTypeAndWithdrawalDestination_Member(TransactionType.WITHDRAWAL, member);
+        List<TransactionHistoryResponse> containsHistoryList = new ArrayList<>();
+        containsHistoryList.addAll(depositHistoryList.stream().map(TransactionHistoryResponse::fromEntityDeposit).toList());
+        containsHistoryList.addAll(withdrawaHistoryList.stream().map(TransactionHistoryResponse::fromEntityWithdrawal).toList());
+        containsHistoryList.sort(Comparator.comparing(TransactionHistoryResponse::transactionTime));
+
+        return Response.<List<TransactionHistoryResponse>>builder()
+                .httpStatus(HttpStatus.OK)
+                .message("거래내역을 성공적으로 조회했습니다")
+                .data(containsHistoryList)
                 .build();
     }
 }
