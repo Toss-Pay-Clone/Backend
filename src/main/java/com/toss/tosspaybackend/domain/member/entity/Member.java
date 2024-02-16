@@ -21,7 +21,7 @@ import java.util.List;
 @SQLRestriction("deleted_at is null")
 public class Member implements Auditable {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String name;
