@@ -19,7 +19,7 @@ public class BankAccountTransactionHistory {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private BigDecimal amount; // 거래 금액
+    private Long amount; // 거래 금액
     private String transactionType; // 거래 유형 (예: 입금, 출금)
     @ManyToOne
     @JoinColumn(name = "deposit_destination_id")
