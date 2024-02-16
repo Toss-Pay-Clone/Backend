@@ -1,9 +1,6 @@
 package com.toss.tosspaybackend.domain.bank.controller;
 
-import com.toss.tosspaybackend.domain.bank.dto.AddBankAccountRequest;
-import com.toss.tosspaybackend.domain.bank.dto.AddBankAccountResponse;
-import com.toss.tosspaybackend.domain.bank.dto.BankAccountListResponse;
-import com.toss.tosspaybackend.domain.bank.dto.GenerateAccountNumberResponse;
+import com.toss.tosspaybackend.domain.bank.dto.*;
 import com.toss.tosspaybackend.domain.bank.service.BankService;
 import com.toss.tosspaybackend.global.Response;
 import jakarta.validation.Valid;
@@ -43,8 +40,22 @@ public class BankController {
 
     @PreAuthorize("hasAuthority(@roleService.getRoleUser())")
     @ResponseStatus(HttpStatus.OK)
-    @GetMapping("/account/{id}")
-    public Response<BankAccountListResponse> bankAccount(@PathVariable("id") Long id) {
-        return bankService.getBankAccount(id);
+    @GetMapping("/account/{accountNumber}")
+    public Response<BankAccountListResponse> bankAccount(@PathVariable("accountNumber") Long accountNumber) {
+        return bankService.getBankAccount(accountNumber);
     }
+
+    @PreAuthorize("hasAuthority(@roleService.getRoleUser())")
+    @ResponseStatus(HttpStatus.OK)
+    @GetMapping("/accounts/transactions")
+    public Response<List<TransactionHistoryResponse>> bankAccountTransactionList() {
+        return bankService.getBankAccountTransactionList();
+    }
+
+//    @PreAuthorize("hasAuthority(@roleService.getRoleUser())")
+//    @ResponseStatus(HttpStatus.OK)
+//    @GetMapping("/accounts/{accountNumber}/transactions")
+//    public Response<List<TransactionHistoryResponse>> bankAccountTransactionList(@PathVariable("accountNumber") Long accountNumber) {
+//        return bankService.getBankAccountTransactionList(accountNumber);
+//    }
 }
