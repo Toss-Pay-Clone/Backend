@@ -1,5 +1,6 @@
 package com.toss.tosspaybackend.domain.bank.entity;
 
+import com.toss.tosspaybackend.domain.bank.enums.TransactionType;
 import com.toss.tosspaybackend.global.basetime.AuditListener;
 import com.toss.tosspaybackend.global.basetime.BaseTime;
 import jakarta.persistence.*;
@@ -7,8 +8,6 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import java.math.BigDecimal;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -20,7 +19,8 @@ public class BankAccountTransactionHistory {
     private Long id;
 
     private Long amount; // 거래 금액
-    private String transactionType; // 거래 유형 (예: 입금, 출금)
+    @Enumerated(EnumType.STRING)
+    private TransactionType transactionType; // 거래 유형 (예: 입금, 출금)
     @ManyToOne
     @JoinColumn(name = "deposit_destination_id")
     private BankAccount depositDestination; // 입금처
