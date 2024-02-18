@@ -10,4 +10,6 @@ import java.util.List;
 public interface BankAccountTransactionHistoryRepository extends JpaRepository<BankAccountTransactionHistory, Long> {
     List<BankAccountTransactionHistory> findByDepositDestination_MemberAndTransactionType(Member member, TransactionType transactionType);
     List<BankAccountTransactionHistory> findByWithdrawalDestination_MemberAndTransactionType(Member member, TransactionType transactionType);
+    List<BankAccountTransactionHistory> findByDepositDestination_BankAccountNumberAndTransactionType(Long bankAccountNumber, TransactionType transactionType);
+    List<BankAccountTransactionHistory> findByWithdrawalDestination_BankAccountNumberAndTransactionType(Long bankAccountNumber, TransactionType transactionType);
 }
