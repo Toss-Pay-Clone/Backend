@@ -52,10 +52,10 @@ public class BankController {
         return bankService.getBankAccountTransactionList();
     }
 
-//    @PreAuthorize("hasAuthority(@roleService.getRoleUser())")
-//    @ResponseStatus(HttpStatus.OK)
-//    @GetMapping("/accounts/{accountNumber}/transactions")
-//    public Response<List<TransactionHistoryResponse>> bankAccountTransactionList(@PathVariable("accountNumber") Long accountNumber) {
-//        return bankService.getBankAccountTransactionList(accountNumber);
-//    }
+    @PreAuthorize("hasAuthority(@roleService.getRoleUser())")
+    @ResponseStatus(HttpStatus.OK)
+    @GetMapping("/accounts/transactions/{transactionNumber}")
+    public Response<TransactionHistoryResponse> bankAccountTransactionList(@PathVariable("transactionNumber") Long transactionNumber) {
+        return bankService.getBankAccountTransaction(transactionNumber);
+    }
 }
