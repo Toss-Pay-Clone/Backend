@@ -132,4 +132,21 @@ public class BankService {
                 .data(containsHistoryList)
                 .build();
     }
+
+    public Response<TransactionHistoryResponse> getBankAccountTransaction(Long transactionNumber) {
+        BankAccountTransactionHistory bankAccountTransactionHistory = bankAccountTransactionHistoryRepository.findById(transactionNumber)
+                .orElseThrow(() -> new GlobalException(ErrorCode.NOT_FOUND, "거래내역을 찾을 수 없습니다."));
+
+        TransactionHistoryResponse responseData;
+        if (bankAccountTransactionHistory.getTransactionType().equals(TransactionType.DEPOSIT)) {
+            responseData = TransactionHistoryResponse.fromEntityDeposit(bankAccountTransactionHistory);
+        } else {
+            responseData = TransactionHistoryResponse.fromEntityWithdrawal(bankAccountTransactionHistory);
+        }
+        return Response.<TransactionHistoryResponse>builder()
+                .httpStatus(HttpStatus.OK)
+                .message("거래내역을 성공적으로 조회했습니다.")
+                .data(responseData)
+                .build();
+    }
 }
