@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface BankAccountTransactionHistoryRepository extends JpaRepository<BankAccountTransactionHistory, Long> {
-    List<BankAccountTransactionHistory> findByTransactionTypeAndDepositDestination_Member(TransactionType transactionType, Member member);
-    List<BankAccountTransactionHistory> findByTransactionTypeAndWithdrawalDestination_Member(TransactionType transactionType, Member member);
+    List<BankAccountTransactionHistory> findByDepositDestination_MemberAndTransactionType(Member member, TransactionType transactionType);
+    List<BankAccountTransactionHistory> findByWithdrawalDestination_MemberAndTransactionType(Member member, TransactionType transactionType);
+    List<BankAccountTransactionHistory> findByDepositDestination_BankAccountNumberAndTransactionType(Long bankAccountNumber, TransactionType transactionType);
+    List<BankAccountTransactionHistory> findByWithdrawalDestination_BankAccountNumberAndTransactionType(Long bankAccountNumber, TransactionType transactionType);
 }

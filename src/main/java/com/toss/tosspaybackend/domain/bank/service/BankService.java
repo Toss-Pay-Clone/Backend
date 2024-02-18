@@ -17,7 +17,6 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.*;
 
 @RequiredArgsConstructor
@@ -116,11 +115,11 @@ public class BankService {
                 .build();
     }
 
-    public Response<List<TransactionHistoryResponse>> getBankAccountTransactionList() {
+    public Response<List<TransactionHistoryResponse>> getUserAccountTransactionList() {
         SecurityContext context = SecurityContextHolder.getContext();
         Member member = (Member) context.getAuthentication().getPrincipal();
-        List<BankAccountTransactionHistory> depositHistoryList = bankAccountTransactionHistoryRepository.findByTransactionTypeAndDepositDestination_Member(TransactionType.DEPOSIT, member);
-        List<BankAccountTransactionHistory> withdrawaHistoryList = bankAccountTransactionHistoryRepository.findByTransactionTypeAndWithdrawalDestination_Member(TransactionType.WITHDRAWAL, member);
+        List<BankAccountTransactionHistory> depositHistoryList = bankAccountTransactionHistoryRepository.findByDepositDestination_MemberAndTransactionType(member, TransactionType.DEPOSIT);
+        List<BankAccountTransactionHistory> withdrawaHistoryList = bankAccountTransactionHistoryRepository.findByWithdrawalDestination_MemberAndTransactionType(member, TransactionType.WITHDRAWAL);
         List<TransactionHistoryResponse> containsHistoryList = new ArrayList<>();
         containsHistoryList.addAll(depositHistoryList.stream().map(TransactionHistoryResponse::fromEntityDeposit).toList());
         containsHistoryList.addAll(withdrawaHistoryList.stream().map(TransactionHistoryResponse::fromEntityWithdrawal).toList());
@@ -147,6 +146,21 @@ public class BankService {
                 .httpStatus(HttpStatus.OK)
                 .message("거래내역을 성공적으로 조회했습니다.")
                 .data(responseData)
+                .build();
+    }
+
+    public Response<List<TransactionHistoryResponse>> getAccountTransactionList(Long bankAccountNumber) {
+        List<BankAccountTransactionHistory> depositHistoryList = bankAccountTransactionHistoryRepository.findByDepositDestination_BankAccountNumberAndTransactionType(bankAccountNumber, TransactionType.DEPOSIT);
+        List<BankAccountTransactionHistory> withdrawaHistoryList = bankAccountTransactionHistoryRepository.findByWithdrawalDestination_BankAccountNumberAndTransactionType(bankAccountNumber, TransactionType.WITHDRAWAL);
+        List<TransactionHistoryResponse> containsHistoryList = new ArrayList<>();
+        containsHistoryList.addAll(depositHistoryList.stream().map(TransactionHistoryResponse::fromEntityDeposit).toList());
+        containsHistoryList.addAll(withdrawaHistoryList.stream().map(TransactionHistoryResponse::fromEntityWithdrawal).toList());
+        containsHistoryList.sort(Comparator.comparing(TransactionHistoryResponse::transactionTime));
+
+        return Response.<List<TransactionHistoryResponse>>builder()
+                .httpStatus(HttpStatus.OK)
+                .message("거래내역을 성공적으로 조회했습니다.")
+                .data(containsHistoryList)
                 .build();
     }
 }

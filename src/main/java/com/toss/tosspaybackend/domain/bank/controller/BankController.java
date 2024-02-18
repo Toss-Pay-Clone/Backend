@@ -48,14 +48,21 @@ public class BankController {
     @PreAuthorize("hasAuthority(@roleService.getRoleUser())")
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/accounts/transactions")
-    public Response<List<TransactionHistoryResponse>> bankAccountTransactionList() {
-        return bankService.getBankAccountTransactionList();
+    public Response<List<TransactionHistoryResponse>> accountTransactionList() {
+        return bankService.getUserAccountTransactionList();
     }
 
     @PreAuthorize("hasAuthority(@roleService.getRoleUser())")
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/accounts/transactions/{transactionNumber}")
-    public Response<TransactionHistoryResponse> bankAccountTransactionList(@PathVariable("transactionNumber") Long transactionNumber) {
+    public Response<TransactionHistoryResponse> bankAccountTransaction(@PathVariable("transactionNumber") Long transactionNumber) {
         return bankService.getBankAccountTransaction(transactionNumber);
+    }
+
+    @PreAuthorize("hasAuthority(@roleService.getRoleUser())")
+    @ResponseStatus(HttpStatus.OK)
+    @GetMapping("/account/{accountNumber}/transactions")
+    public Response<List<TransactionHistoryResponse>> bankAccountTransactionList(@PathVariable("accountNumber") Long accountNumber) {
+        return bankService.getAccountTransactionList(accountNumber);
     }
 }
