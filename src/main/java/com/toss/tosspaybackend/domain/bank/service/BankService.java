@@ -128,7 +128,7 @@ public class BankService {
 
         return Response.<List<TransactionHistoryResponse>>builder()
                 .httpStatus(HttpStatus.OK)
-                .message("거래내역을 성공적으로 조회했습니다")
+                .message("거래내역을 성공적으로 조회했습니다.")
                 .data(containsHistoryList)
                 .build();
     }
