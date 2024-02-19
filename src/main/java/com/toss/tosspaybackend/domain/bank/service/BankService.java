@@ -3,6 +3,7 @@ package com.toss.tosspaybackend.domain.bank.service;
 import com.toss.tosspaybackend.domain.bank.dto.*;
 import com.toss.tosspaybackend.domain.bank.entity.BankAccount;
 import com.toss.tosspaybackend.domain.bank.entity.BankAccountTransactionHistory;
+import com.toss.tosspaybackend.domain.bank.enums.RemittanceStatus;
 import com.toss.tosspaybackend.domain.bank.enums.TransactionType;
 import com.toss.tosspaybackend.domain.bank.repository.BankAccountRepository;
 import com.toss.tosspaybackend.domain.bank.repository.BankAccountTransactionHistoryRepository;
@@ -16,6 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 
@@ -161,6 +163,57 @@ public class BankService {
                 .httpStatus(HttpStatus.OK)
                 .message("거래내역을 성공적으로 조회했습니다.")
                 .data(containsHistoryList)
+                .build();
+    }
+
+    @Transactional
+    public Response<RemittanceStatus> sendRemittance(Long accountNumber, RemittanceRequest request) {
+        BankAccount sourceAccount = bankAccountRepository.findById(accountNumber)
+                .orElseThrow(() -> new GlobalException(ErrorCode.NOT_FOUND, "계좌를 찾을 수 없습니다."));
+
+        Optional<BankAccount> findTargetAccount = bankAccountRepository.findById(request.targetAccount());
+        if (findTargetAccount.isEmpty()) {
+            return Response.<RemittanceStatus>builder()
+                    .httpStatus(HttpStatus.NOT_FOUND)
+                    .message("송금하려는 계좌가 존재하지 않음")
+                    .data(RemittanceStatus.ACCOUNT_NOT_EXIST)
+                    .build();
+        }
+
+        BankAccount targetAccount = findTargetAccount.get();
+
+        if (sourceAccount.getBalance() < request.amount()) {
+            return Response.<RemittanceStatus>builder()
+                    .httpStatus(HttpStatus.BAD_REQUEST)
+                    .message("금액 부족")
+                    .data(RemittanceStatus.INSUFFICIENT_FUNDS)
+                    .build();
+        }
+
+        sourceAccount.decreaseBalance(request.amount());
+        targetAccount.increaseBalance(request.amount());
+        bankAccountRepository.save(sourceAccount);
+        bankAccountRepository.save(targetAccount);
+
+        bankAccountTransactionHistoryRepository.save(BankAccountTransactionHistory.builder()
+                .amount(request.amount())
+                .transactionType(TransactionType.WITHDRAWAL)
+                .depositDestination(targetAccount)
+                .withdrawalDestination(sourceAccount)
+                .balanceAfterTransaction(sourceAccount.getBalance())
+                .build());
+        bankAccountTransactionHistoryRepository.save(BankAccountTransactionHistory.builder()
+                .amount(request.amount())
+                .transactionType(TransactionType.DEPOSIT)
+                .depositDestination(targetAccount)
+                .withdrawalDestination(sourceAccount)
+                .balanceAfterTransaction(targetAccount.getBalance())
+                .build());
+
+        return Response.<RemittanceStatus>builder()
+                .httpStatus(HttpStatus.OK)
+                .message("송금 성공")
+                .data(RemittanceStatus.SUCCESS)
                 .build();
     }
 }

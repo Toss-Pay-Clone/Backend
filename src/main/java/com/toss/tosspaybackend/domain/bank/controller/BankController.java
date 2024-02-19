@@ -1,6 +1,7 @@
 package com.toss.tosspaybackend.domain.bank.controller;
 
 import com.toss.tosspaybackend.domain.bank.dto.*;
+import com.toss.tosspaybackend.domain.bank.enums.RemittanceStatus;
 import com.toss.tosspaybackend.domain.bank.service.BankService;
 import com.toss.tosspaybackend.global.Response;
 import jakarta.validation.Valid;
@@ -64,5 +65,13 @@ public class BankController {
     @GetMapping("/account/{accountNumber}/transactions")
     public Response<List<TransactionHistoryResponse>> bankAccountTransactionList(@PathVariable("accountNumber") Long accountNumber) {
         return bankService.getAccountTransactionList(accountNumber);
+    }
+
+    @PreAuthorize("hasAuthority(@roleService.getRoleUser())")
+    @ResponseStatus(HttpStatus.OK)
+    @PostMapping("/account/{accountNumber}/remittance")
+    public Response<RemittanceStatus> sendRemittance(@PathVariable("accountNumber") Long accountNumber,
+                                                     @RequestBody RemittanceRequest request) {
+        return bankService.sendRemittance(accountNumber, request);
     }
 }

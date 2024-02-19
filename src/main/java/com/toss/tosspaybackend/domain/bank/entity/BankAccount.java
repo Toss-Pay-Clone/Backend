@@ -41,4 +41,12 @@ public class BankAccount implements Auditable {
         this.member = member;
         this.password = password;
     }
+
+    public void increaseBalance(Long amount) {
+        this.balance += amount;
+    }
+
+    public void decreaseBalance(Long amount) {
+        this.balance -= amount;
+    }
 }

@@ -2,18 +2,16 @@ package com.toss.tosspaybackend.domain.bank.entity;
 
 import com.toss.tosspaybackend.domain.bank.enums.TransactionType;
 import com.toss.tosspaybackend.global.basetime.AuditListener;
+import com.toss.tosspaybackend.global.basetime.Auditable;
 import com.toss.tosspaybackend.global.basetime.BaseTime;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @EntityListeners(AuditListener.class)
 @Entity
-public class BankAccountTransactionHistory {
+public class BankAccountTransactionHistory implements Auditable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -33,4 +31,13 @@ public class BankAccountTransactionHistory {
     @Embedded
     @Column(nullable = false)
     private BaseTime baseTime;
+
+    @Builder
+    public BankAccountTransactionHistory(Long amount, TransactionType transactionType, BankAccount depositDestination, BankAccount withdrawalDestination, Long balanceAfterTransaction) {
+        this.amount = amount;
+        this.transactionType = transactionType;
+        this.depositDestination = depositDestination;
+        this.withdrawalDestination = withdrawalDestination;
+        this.balanceAfterTransaction = balanceAfterTransaction;
+    }
 }
