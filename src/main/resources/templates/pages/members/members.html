@@ -287,7 +287,7 @@
           <div class="col-12 grid-margin">
             <div class="card">
               <div class="card-body">
-                <h4 class="card-title">Order Status</h4>
+                <h4 class="card-title">Member List</h4>
                 <div class="table-responsive">
                   <table class="table">
                     <thead>
@@ -299,17 +299,17 @@
                           </label>
                         </div>
                       </th>
-                      <th> Client Name </th>
-                      <th> Order No </th>
-                      <th> Product Cost </th>
-                      <th> Project </th>
-                      <th> Payment Mode </th>
-                      <th> Start Date </th>
-                      <th> Payment Status </th>
+                      <th> ID </th>
+                      <th> Name </th>
+                      <th> Phone </th>
+                      <th> Total Balance </th>
+                      <th> Create Date </th>
+                      <th> Status </th>
                     </tr>
                     </thead>
                     <tbody>
-                    <tr>
+
+                    <tr th:each="member : ${members}">
                       <td>
                         <div class="form-check form-check-muted m-0">
                           <label class="form-check-label">
@@ -317,101 +317,18 @@
                           </label>
                         </div>
                       </td>
+                      <td th:text="${member.id}">ID</td>
                       <td>
-                        <img th:src="@{/assets/images/faces/face1.jpg}" alt="image" />
-                        <span class="pl-2">Henry Klein</span>
+                        <span class="pl-2" th:text="${member.name}">이름</span>
                       </td>
-                      <td> 02312 </td>
-                      <td> $14,500 </td>
-                      <td> Dashboard </td>
-                      <td> Credit card </td>
-                      <td> 04 Dec 2019 </td>
+                      <td th:text="${member.phone}">Phone</td>
+                      <td>100,000,000 KRW</td>
+<!--                      <td th:text=" KRW"></td>-->
+                      <td th:text="${member.baseTime.createdAt}"></td>
                       <td>
-                        <div class="badge badge-outline-success">Approved</div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <div class="form-check form-check-muted m-0">
-                          <label class="form-check-label">
-                            <input type="checkbox" class="form-check-input">
-                          </label>
-                        </div>
-                      </td>
-                      <td>
-                        <img th:src="@{/assets/images/faces/face2.jpg}" alt="image" />
-                        <span class="pl-2">Estella Bryan</span>
-                      </td>
-                      <td> 02312 </td>
-                      <td> $14,500 </td>
-                      <td> Website </td>
-                      <td> Cash on delivered </td>
-                      <td> 04 Dec 2019 </td>
-                      <td>
-                        <div class="badge badge-outline-warning">Pending</div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <div class="form-check form-check-muted m-0">
-                          <label class="form-check-label">
-                            <input type="checkbox" class="form-check-input">
-                          </label>
-                        </div>
-                      </td>
-                      <td>
-                        <img th:src="@{/assets/images/faces/face5.jpg}" alt="image" />
-                        <span class="pl-2">Lucy Abbott</span>
-                      </td>
-                      <td> 02312 </td>
-                      <td> $14,500 </td>
-                      <td> App design </td>
-                      <td> Credit card </td>
-                      <td> 04 Dec 2019 </td>
-                      <td>
-                        <div class="badge badge-outline-danger">Rejected</div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <div class="form-check form-check-muted m-0">
-                          <label class="form-check-label">
-                            <input type="checkbox" class="form-check-input">
-                          </label>
-                        </div>
-                      </td>
-                      <td>
-                        <img th:src="@{assets/images/faces/face3.jpg}" alt="image" />
-                        <span class="pl-2">Peter Gill</span>
-                      </td>
-                      <td> 02312 </td>
-                      <td> $14,500 </td>
-                      <td> Development </td>
-                      <td> Online Payment </td>
-                      <td> 04 Dec 2019 </td>
-                      <td>
-                        <div class="badge badge-outline-success">Approved</div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <div class="form-check form-check-muted m-0">
-                          <label class="form-check-label">
-                            <input type="checkbox" class="form-check-input">
-                          </label>
-                        </div>
-                      </td>
-                      <td>
-                        <img th:src="@{/assets/images/faces/face4.jpg}" alt="image" />
-                        <span class="pl-2">Sallie Reyes</span>
-                      </td>
-                      <td> 02312 </td>
-                      <td> $14,500 </td>
-                      <td> Website </td>
-                      <td> Credit card </td>
-                      <td> 04 Dec 2019 </td>
-                      <td>
-                        <div class="badge badge-outline-success">Approved</div>
+                        <div class="badge badge-outline-success" th:if="${member.accountStatus == T(com.toss.tosspaybackend.domain.member.enums.AccountStatus).ACTIVE}">Active</div>
+                        <div class="badge badge-outline-warning" th:if="${member.accountStatus == T(com.toss.tosspaybackend.domain.member.enums.AccountStatus).SUSPENDED}">Suspended</div>
+                        <div class="badge badge-outline-danger" th:if="${member.accountStatus == T(com.toss.tosspaybackend.domain.member.enums.AccountStatus).BANNED}">Banned</div>
                       </td>
                     </tr>
                     </tbody>
