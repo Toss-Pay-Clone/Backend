@@ -311,20 +311,15 @@
 
                     <tr th:each="member : ${members}">
                       <td>
-                        <div class="form-check form-check-muted m-0">
-                          <label class="form-check-label">
-                            <input type="checkbox" class="form-check-input">
-                          </label>
-                        </div>
+                        <a class="btn btn-info btn-fw" th:href="@{'/admin/members/' + ${member.phone}}">Details</a>
                       </td>
                       <td th:text="${member.id}">ID</td>
                       <td>
                         <span class="pl-2" th:text="${member.name}">이름</span>
                       </td>
                       <td th:text="${member.phone}">Phone</td>
-                      <td>100,000,000 KRW</td>
-<!--                      <td th:text=" KRW"></td>-->
-                      <td th:text="${member.baseTime.createdAt}"></td>
+                      <td th:text="${member.totalBalance} + ' KRW'"></td>
+                      <td th:text="${member.createdAt}"></td>
                       <td>
                         <div class="badge badge-outline-success" th:if="${member.accountStatus == T(com.toss.tosspaybackend.domain.member.enums.AccountStatus).ACTIVE}">Active</div>
                         <div class="badge badge-outline-warning" th:if="${member.accountStatus == T(com.toss.tosspaybackend.domain.member.enums.AccountStatus).SUSPENDED}">Suspended</div>
