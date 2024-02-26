@@ -19,6 +19,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @RequiredArgsConstructor
@@ -214,6 +216,36 @@ public class BankService {
                 .httpStatus(HttpStatus.OK)
                 .message("송금 성공")
                 .data(RemittanceStatus.SUCCESS)
+                .build();
+    }
+
+    public Response<DateTransactionHistoryResponse> getDateTransactionList(DateTransactionRequest request) {
+        SecurityContext context = SecurityContextHolder.getContext();
+        Member member = (Member) context.getAuthentication().getPrincipal();
+        List<BankAccountTransactionHistory> findTransactionHistoryList = bankAccountTransactionHistoryRepository.findByMemberAndBaseTime_CreatedAtYearAndMonth(member.getId(), request.year(), request.month());
+
+        List<TransactionHistoryResponse> responseTransactionList = findTransactionHistoryList
+                .stream()
+                .map(history ->
+                        history.getTransactionType().equals(TransactionType.DEPOSIT) ?
+                                TransactionHistoryResponse.fromEntityDeposit(history) :
+                                TransactionHistoryResponse.fromEntityWithdrawal(history))
+                .sorted(Comparator.comparing(TransactionHistoryResponse::transactionTime).reversed())
+                .toList();
+
+        Long totalSpent = responseTransactionList
+                .stream()
+                .filter(rtl -> rtl.transactionType().equals(TransactionType.WITHDRAWAL))
+                .mapToLong(TransactionHistoryResponse::amount)
+                .sum();
+
+        return Response.<DateTransactionHistoryResponse>builder()
+                .httpStatus(HttpStatus.OK)
+                .message("거래내역을 성공적으로 조회했습니다.")
+                .data(DateTransactionHistoryResponse.builder()
+                        .totalSpent(totalSpent)
+                        .historyList(responseTransactionList)
+                        .build())
                 .build();
     }
 }
