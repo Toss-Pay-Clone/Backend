@@ -74,4 +74,11 @@ public class BankController {
                                                      @RequestBody RemittanceRequest request) {
         return bankService.sendRemittance(accountNumber, request);
     }
+
+    @PreAuthorize("hasAuthority(@roleService.getRoleUser())")
+    @ResponseStatus(HttpStatus.OK)
+    @GetMapping("/accounts/transactions/date")
+    public Response<DateTransactionHistoryResponse> accountDateTransactionList(@RequestBody DateTransactionRequest request) {
+        return bankService.getDateTransactionList(request);
+    }
 }
